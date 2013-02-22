@@ -28,89 +28,108 @@ void loop()
   float sideFrontTotal = 0.00;  
   float sideRearTotal = 0.00; 
   pinMode(4, INPUT);
-  float pulse = pulseIn(4, HIGH);
-  float cmF = pulse * 0.0173;
-  //float cmF = pingWall(4);   // Sonar ping from the front sensor
-  if (hardLeftCount == 1) {
-    straight();
+  /* float cmFarray[3];
+  for (int i = 0; i < 3; ++i){  // too slow!!!
+    float pulse = pulseIn(4, HIGH);
+    cmFarray[i] = pulse * 0.0173;
   }
-  else if (hardLeftCount == 0) {
-   if (cmF < 24){
+  // having the gripper down destroys side measurements
+  float cmF = medianer(cmFarray);     */ 
+    float pulse = pulseIn(4, HIGH);
+    float cmF = pulse * 0.0173;
+    
+  //float cmF = pingWall(4);   // Sonar ping from the front sensor
+  if (hardLeftCount == 1) { //west
+    straight();
+    if (cmF < 24){
       hardleft();
     }
-  if (cmF > 140){
-    northCount = 0;
   }
-   if (cmF < 69 && northCount > 4){
+   else if (hardLeftCount == 2) { //south
+     straight();
+     if (cmF < 24){
+      hardleft();
+    }
+   }
+   else if (hardLeftCount > 2) { //east
+    freeze();
+   }
+  else if (hardLeftCount == 0) {
+    if (cmF < 24){
+      hardleft();
+    }
+    if (cmF > 140){
+      northCount = 0;
+    }
+    if (cmF < 69 && northCount > 4){
       hardleft();
       northCount = 0;
     }
-  //Serial.println(RCTime(11));
-  for (int var = 1; var <= 3; ++var)                                  // Loop to get average distance readings
-  {
-    //float cmF2 = pingWall(4);
-    // if (cmF2 > cmF){
-    //    cmF = cmF2;
-    // }   
-    float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
-    float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
-    // frontTotal = (frontTotal + cmF);
-    sideFrontTotal = (sideFrontTotal + cmSF);     // Adds the values in preparation for averaging, average value of 5
-    sideRearTotal = (sideRearTotal + cmSR);       // distance readings are used to minimize 'hunting' and overcompensation while turning
-  }
-  float distAveFront = 30; // = (frontTotal/3);            // Distance from the wall in front of robot, determines a hard left turn
-  float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
-  float distAveSideRear = (sideRearTotal/3);
-  Serial.print(cmF); // show inches...
-  Serial.println(); 
-  //Serial.println(); 
-  //Serial.print(distAveSideFront*0.39); 
-  //Serial.println();    
-  //Serial.print(distAveSideRear*0.39);             
-  Serial.println();
-  
-  // north motion -- not getting zero sometimes
-  if (cmF > 132 && northCount == 0){
-    turn (distAveFront, distAveSideFront, distAveSideRear);
-  }
-  else if (cmF < 132 && northCount == 0) {// && RCTime(11) < QTIref - 1000) { // < 8000){
-    freeze();
-    delay(600);
-    northCount++;
-  }
-  else if (cmF < 122 && northCount == 1){ // && RCTime(11) < QTIref - 1000) { // < 8000){
-    freeze();
-    delay(600);
-    northCount++;
-  }
-  else if (cmF < 114 && northCount == 2){ // && RCTime(11) < QTIref - 1000) { // < 8000){
-    freeze();
-    delay(600);
-    northCount++;
-  }
-  else if (cmF < 107 && northCount == 3){ //&& RCTime(11) < QTIref - 1000) { // < 8000){
-    freeze();
-    delay(600);
-    northCount++;
-  }
-  else if (cmF < 99 && northCount == 4){ //&& RCTime(11) < QTIref - 1000) { // < 8000){
-    freeze();
-    delay(600);
-    northCount++;
-  }
-  else if (cmF < 91 && northCount == 5){ // && RCTime(11) < QTIref - 1000) { // < 8000){
-    freeze();
-    delay(600);
-    northCount++;
-  }
-  else{
-    turn (distAveFront, distAveSideFront, distAveSideRear);
-    //QTIref = RCTime(11);
-    //QTIref = (QTIref + RCTime(11))/2 ;
-  }
-  Serial.print(northCount);
-  Serial.println();  
- }
+    //Serial.println(RCTime(11));
+    for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
+      //float cmF2 = pingWall(4);
+      // if (cmF2 > cmF){
+      //    cmF = cmF2;
+      // }   
+      float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
+      float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
+      // frontTotal = (frontTotal + cmF);
+      sideFrontTotal = (sideFrontTotal + cmSF);     // Adds the values in preparation for averaging, average value of 5
+      sideRearTotal = (sideRearTotal + cmSR);       // distance readings are used to minimize 'hunting' and overcompensation while turning
+    }
+    float distAveFront = 30; // = (frontTotal/3);            // Distance from the wall in front of robot, determines a hard left turn
+    float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
+    float distAveSideRear = (sideRearTotal/3);
+    Serial.print(cmF); // show inches...
+    Serial.println(); 
+    //Serial.println(); 
+    //Serial.print(distAveSideFront*0.39); 
+    //Serial.println();    
+    //Serial.print(distAveSideRear*0.39);             
+    Serial.println();
+    
+    // north motion -- not getting zero sometimes
+    if (cmF > 132 && northCount == 0){
+      turn (distAveFront, distAveSideFront, distAveSideRear);
+    }
+    else if (cmF < 132 && northCount == 0) {// && RCTime(11) < QTIref - 1000) { // < 8000){
+      freeze();
+      delay(600);
+      northCount++;
+    }
+    else if (cmF < 122 && northCount == 1){ // && RCTime(11) < QTIref - 1000) { // < 8000){
+      freeze();
+      delay(600);
+      northCount++;
+    }
+    else if (cmF < 114 && northCount == 2){ // && RCTime(11) < QTIref - 1000) { // < 8000){
+      freeze();
+      delay(600);
+      northCount++;
+    }
+    else if (cmF < 107 && northCount == 3){ //&& RCTime(11) < QTIref - 1000) { // < 8000){
+      freeze();
+      delay(600);
+      northCount++;
+    }
+    else if (cmF < 99 && northCount == 4){ //&& RCTime(11) < QTIref - 1000) { // < 8000){
+      freeze();
+      delay(600);
+      northCount++;
+    }
+    else if (cmF < 91 && northCount == 5){ // && RCTime(11) < QTIref - 1000) { // < 8000){
+      freeze();
+      delay(600);
+      northCount++;
+    }
+    else{
+      turn (distAveFront, distAveSideFront, distAveSideRear);
+      //QTIref = RCTime(11);
+      //QTIref = (QTIref + RCTime(11))/2 ;
+    }
+    Serial.print(northCount);
+    Serial.println();  
+   }
  }
  // END OF VOID LOOP!!! 
 // Set the motor index, direction, and speed
@@ -197,33 +216,33 @@ void turn(float distAveFront, float distAveSideFront, float distAveSideRear)
     
 void left()                                                // Cuts out the left motor to turn the robot left
 {
- SetSpeed(0, false, 74);
- SetSpeed(1, false, 90);
+ SetSpeed(0, false, 55); //74
+ SetSpeed(1, false, 70); //90
  //delayMicroseconds(500);
 }
 
 void hardleft()                                            // Cuts out the left motor to turn the robot hard to the left
 {                                                          // when a wall is detected to the front
  SetSpeed(0, false, 0);
- SetSpeed(1, false, 90); // 45);
- delay(100);
- SetSpeed(0, true, 90);
- SetSpeed(1, false, 90);
+ SetSpeed(1, false, 80); //90 // 45);
+ delay(50); //100
+ SetSpeed(0, true, 70);
+ SetSpeed(1, false, 70);
  delay(500);
  hardLeftCount++;
 }
 
 void right()                                               // Cuts out the right motor to turn the robot right
 {
- SetSpeed(0, false, 90); // 45);
- SetSpeed(1, false, 74); //37);
+ SetSpeed(0, false, 70); // 45);
+ SetSpeed(1, false, 55); //37);
  //delayMicroseconds(250);
 }
 
 void straight()                                            // Both motors on to go straight
 {
- SetSpeed(0, false, 90); // 45);
- SetSpeed(1, false, 90);
+ SetSpeed(0, false, 70); // 45);
+ SetSpeed(1, false, 70);
 }
 
 void freeze(){
@@ -264,4 +283,17 @@ long RCTime(int sensorIn){
   }
   return duration;
 }
-  
+
+float medianer (float *x) {
+  for (int i = 0; i<3-1; ++i) {  //size function?
+    for (int j = i+1; j<3; ++j) {
+      if (x[j] < x[i]) {
+        float temp = x[i];
+        x[i] = x[j];
+        x[j] = temp;
+      }
+    }
+  }
+  return x[1]; // length divided by 2?
+}
+
