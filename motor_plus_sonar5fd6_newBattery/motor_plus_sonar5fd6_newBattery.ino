@@ -7,10 +7,10 @@
                                                   
 SoftwareSerial pololu(RXPIN, TXPIN);              // Create an instance of the software serial
                                                   // communication object. This represents the
-                                                // interface with the TReX Jr device
+int topSpeed = 85;                                // interface with the TReX Jr device
 int northCount = 0;
 int hardLeftCount = 0;
-long QTIref = 1000;
+long QTIref = 1200;
 
 void setup()                                      // Main application entry point
 {
@@ -28,6 +28,8 @@ void loop()
   float sideFrontTotal = 0.00;  
   float sideRearTotal = 0.00; 
   pinMode(4, INPUT);
+  pinMode(5, INPUT);
+  //Serial.println(RCTime(11));
   /* float cmFarray[3];
   for (int i = 0; i < 3; ++i){  // too slow!!!
     float pulse = pulseIn(4, HIGH);
@@ -36,7 +38,9 @@ void loop()
   // having the gripper down destroys side measurements
   float cmF = medianer(cmFarray);     */ 
     float pulse = pulseIn(4, HIGH);
+    float pulse2 = pulseIn(4, HIGH);
     float cmF = pulse * 0.0173;
+    float cmR = pulse2 * 0.0173;
     
   //float cmF = pingWall(4);   // Sonar ping from the front sensor
   if (hardLeftCount == 1) { //west
@@ -44,6 +48,7 @@ void loop()
     if (cmF < 24){
       hardleft();
     }
+    
   }
    else if (hardLeftCount == 2) { //south
      straight();
@@ -53,6 +58,7 @@ void loop()
    }
    else if (hardLeftCount > 2) { //east
     freeze();
+    
    }
   else if (hardLeftCount == 0) {
     if (cmF < 24){
@@ -61,11 +67,10 @@ void loop()
     if (cmF > 140){
       northCount = 0;
     }
-    if (cmF < 69 && northCount > 4){
+    if (cmF < 85 && northCount > 4){
       hardleft();
       northCount = 0;
     }
-    //Serial.println(RCTime(11));
     for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
       //float cmF2 = pingWall(4);
       // if (cmF2 > cmF){
@@ -80,34 +85,29 @@ void loop()
     float distAveFront = 30; // = (frontTotal/3);            // Distance from the wall in front of robot, determines a hard left turn
     float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
     float distAveSideRear = (sideRearTotal/3);
-    Serial.print(cmF); // show inches...
-    Serial.println(); 
-    //Serial.println(); 
-    //Serial.print(distAveSideFront*0.39); 
-    //Serial.println();    
-    //Serial.print(distAveSideRear*0.39);             
-    Serial.println();
+    //Serial.print(cmF); // show inches...
+    //Serial.println();
     
     // north motion -- not getting zero sometimes
     if (cmF > 132 && northCount == 0){
       turn (distAveFront, distAveSideFront, distAveSideRear);
     }
-    else if (cmF < 132 && northCount == 0) {// && RCTime(11) < QTIref - 1000) { // < 8000){
+    else if (cmF < 132 && northCount == 0) { // && RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 122 && northCount == 1){ // && RCTime(11) < QTIref - 1000) { // < 8000){
+    else if (cmF < 122 && northCount == 1) { //&& RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 114 && northCount == 2){ // && RCTime(11) < QTIref - 1000) { // < 8000){
+    else if (cmF < 114 && northCount == 2){ //&& RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 107 && northCount == 3){ //&& RCTime(11) < QTIref - 1000) { // < 8000){
+    else if (cmF < 107 && northCount == 3){ //&& RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
@@ -127,12 +127,122 @@ void loop()
       //QTIref = RCTime(11);
       //QTIref = (QTIref + RCTime(11))/2 ;
     }
-    Serial.print(northCount);
+    //Serial.print(northCount);
     Serial.println();  
    }
  }
  // END OF VOID LOOP!!! 
-// Set the motor index, direction, and speed
+
+
+void turn(float distAveFront, float distAveSideFront, float distAveSideRear) 
+{
+    if (distAveSideFront > 17 && distAveSideRear - distAveSideFront < 7 ){ // 20 AND 7 originally
+      right();
+    }
+    else if (distAveSideFront < 15 && distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
+      left();
+    }
+    else // if (distAveFront > 24)
+    {
+      if (distAveSideFront > (distAveSideRear - 0.4))
+      {
+        right();
+      }
+      else if (distAveSideFront < (distAveSideRear + 0.4))
+      {
+        left();
+      }
+      else
+      {
+        straight();
+      }
+    }
+    // else
+    // {
+    //    hardleft();
+    // }
+    
+}
+    
+void left()                                                // Cuts out the left motor to turn the robot left
+{
+ SetSpeed(0, false, int(topSpeed*0.8)); //74
+ SetSpeed(1, false, topSpeed); //90
+ //delayMicroseconds(500);
+}
+
+void hardleft()                                            // Cuts out the left motor to turn the robot hard to the left
+{                                                          // when a wall is detected to the front
+ SetSpeed(0, false, 0);
+ SetSpeed(1, false, int(topSpeed)); //90 // 45);
+ delay(100); //100
+ SetSpeed(0, true, topSpeed*0.9);
+ SetSpeed(1, false, topSpeed);
+ delay(500);
+ float pulse = pulseIn(4, HIGH);
+ float cmF = pulse * 0.0173;
+ while (cmF < 24 || cmF > 105) {// Sonar ping from the front sensor
+   delay(30);
+   pulse = pulseIn(4, HIGH);
+   cmF = pulse * 0.0173; 
+ }
+ hardLeftCount++;
+}
+
+void right()                                               // Cuts out the right motor to turn the robot right
+{
+ SetSpeed(0, false, topSpeed); // 45);
+ SetSpeed(1, false, int(topSpeed*0.8)); //37);
+ //delayMicroseconds(250);
+}
+
+void straight()                                            // Both motors on to go straight
+{
+ SetSpeed(0, false, topSpeed); // 45);
+ SetSpeed(1, false, topSpeed);
+}
+
+void freeze(){
+  SetSpeed(0, false, 0);
+  SetSpeed(1, false, 0);
+}
+
+void movement(){
+    float frontTotal = 0.00;
+  float sideFrontTotal = 0.00;  
+  float sideRearTotal = 0.00; 
+    // Sonar ping from the front sensor
+   if (cmF < 24){
+      hardleft();
+    }
+  for (int var = 1; var <= 3; ++var)
+  {                   
+    float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
+    float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
+    frontTotal = (frontTotal + cmF);
+    sideFrontTotal = (sideFrontTotal + cmSF);
+    sideRearTotal = (sideRearTotal + cmSR);  
+  }
+  float distAveFront = 30; // = (frontTotal/50);  
+  float distAveSideFront = (sideFrontTotal/3); 
+  float distAveSideRear = (sideRearTotal/3);
+}
+
+// ______QTI____________________
+long RCTime(int sensorIn){
+  long duration = 0;
+  pinMode(sensorIn, OUTPUT); // Make pin OUTPUT
+  digitalWrite(sensorIn, HIGH); // Pin HIGH (discharge capacitor)
+  delay(1); // Wait 1ms
+  pinMode(sensorIn, INPUT); // Make pin INPUT
+  digitalWrite(sensorIn, LOW); // Turn off internal pullups
+  while(digitalRead(sensorIn)){ // Wait for pin to go LOW
+    duration++;
+  }
+  return duration;
+}
+
+// MOTORS_____________Set the motor index, direction, and speed
 // Motor index should either be a 0 or 1
 // Direction should be either true for forward or false for backwards
 // Speed should range between 0 and 127 (inclusivly)
@@ -178,110 +288,6 @@ float pingWall (int pingPin)                              // Ping signal
   digitalWrite(pingPin, LOW);
   pinMode(pingPin, INPUT);
   return microsecondsToCentimeters(pulseIn(pingPin, HIGH));
-}
-
-void turn(float distAveFront, float distAveSideFront, float distAveSideRear) 
-{
-    if (distAveSideFront > 17 && distAveSideRear - distAveSideFront < 7 ){ // 20 AND 7 originally
-      right();
-    }
-    else if (distAveSideFront < 15 && distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
-      left();
-    }
-    else // if (distAveFront > 24)
-    {
-      //Serial.print(distAveSideRear);                //Diagnostic tool
-      //Serial.println(); 
-      //if (distAveSide > 11) //casey had 11
-      if (distAveSideFront > (distAveSideRear - 0.4))
-      {
-        right();
-      }
-      // else if (distAveSide < 10) // casey had 10
-      else if (distAveSideFront < (distAveSideRear + 0.4))
-      {
-        left();
-      }
-      else
-      {
-        straight();
-      }
-    }
-    // else
-    // {
-    //    hardleft();
-    // }
-    
-}
-    
-void left()                                                // Cuts out the left motor to turn the robot left
-{
- SetSpeed(0, false, 55); //74
- SetSpeed(1, false, 70); //90
- //delayMicroseconds(500);
-}
-
-void hardleft()                                            // Cuts out the left motor to turn the robot hard to the left
-{                                                          // when a wall is detected to the front
- SetSpeed(0, false, 0);
- SetSpeed(1, false, 80); //90 // 45);
- delay(50); //100
- SetSpeed(0, true, 70);
- SetSpeed(1, false, 70);
- delay(500);
- hardLeftCount++;
-}
-
-void right()                                               // Cuts out the right motor to turn the robot right
-{
- SetSpeed(0, false, 70); // 45);
- SetSpeed(1, false, 55); //37);
- //delayMicroseconds(250);
-}
-
-void straight()                                            // Both motors on to go straight
-{
- SetSpeed(0, false, 70); // 45);
- SetSpeed(1, false, 70);
-}
-
-void freeze(){
-  SetSpeed(0, false, 0);
-  SetSpeed(1, false, 0);
-}
-
-void movement(){
-    float frontTotal = 0.00;
-  float sideFrontTotal = 0.00;  
-  float sideRearTotal = 0.00; 
-  float cmF = pingWall(4);   // Sonar ping from the front sensor
-   if (cmF < 24){
-      hardleft();
-    }
-  for (int var = 1; var <= 3; ++var)
-  {                   
-    float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
-    float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
-    frontTotal = (frontTotal + cmF);
-    sideFrontTotal = (sideFrontTotal + cmSF);
-    sideRearTotal = (sideRearTotal + cmSR);  
-  }
-  float distAveFront = 30; // = (frontTotal/50);  
-  float distAveSideFront = (sideFrontTotal/3); 
-  float distAveSideRear = (sideRearTotal/3);
-}
-
-long RCTime(int sensorIn){
-  long duration = 0;
-  pinMode(sensorIn, OUTPUT); // Make pin OUTPUT
-  digitalWrite(sensorIn, HIGH); // Pin HIGH (discharge capacitor)
-  delay(1); // Wait 1ms
-  pinMode(sensorIn, INPUT); // Make pin INPUT
-  digitalWrite(sensorIn, LOW); // Turn off internal pullups
-  while(digitalRead(sensorIn)){ // Wait for pin to go LOW
-    duration++;
-  }
-  return duration;
 }
 
 float medianer (float *x) {
