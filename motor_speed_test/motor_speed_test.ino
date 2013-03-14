@@ -30,9 +30,9 @@ void setup()
 void loop()
 { 
   Serial1.print("Setting speed to: ");
-  delay(8000);
+  delay(4000);
    // Loop through 127 to 0, forward
-  for(int i = 70; i >= 120; i--)
+  for(int i = 120; i >= 60; i--)
   {
     // Say that we are setting our speed
     Serial1.print("Setting speed to: ");
