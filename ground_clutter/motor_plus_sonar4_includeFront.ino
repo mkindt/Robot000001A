@@ -1,4 +1,10 @@
-
+// SonarNavigation version 7
+//
+// Casey Darden, Michael Kindt, Dakota Lazenby
+//
+// Allows a small robot equipped with one forward facing PING sensor and one side facing PING sensor to Navigate in a counterclockwise fashion,
+// maintaining a distance of 10 cm from the wall to its right, turning left when it approaches a wall to the front
+//
 
 #include <SoftwareSerial.h>                       // Included for serial communication
  
@@ -26,23 +32,21 @@ void loop()                                       // Main application loop
 {
   float frontTotal = 0.00;                        // Zeros out the variables used to calculate the average distance
   float sideFrontTotal = 0.00;  
-  float sideRearTotal = 0.00; 
-  float cmF = pingWall(4);   // Sonar ping from the front sensor
-   if (cmF < 24){
-      hardleft();
-    }
-  for (int var = 1; var <= 3; ++var)                                  // Loop to get average distance readings
+  float sideRearTotal = 0.00;  
+  int var = 1;
+  while(var < 5)                                  // Loop to get average distance readings
   {
-                        
+    float cmF = pingWall(4);                      // Sonar ping from the front sensor
     float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
-    float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
+    float cmSR = pingWall(2);                     // Sonar ping from the side rear sensor
     frontTotal = (frontTotal + cmF);
     sideFrontTotal = (sideFrontTotal + cmSF);     // Adds the values in preparation for averaging, average value of 5
     sideRearTotal = (sideRearTotal + cmSR);       // distance readings are used to minimize 'hunting' and overcompensation while turning
+    var++;
   }
-  float distAveFront = 30; // = (frontTotal/50);            // Distance from the wall in front of robot, determines a hard left turn
-  float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
-  float distAveSideRear = (sideRearTotal/3);
+  float distAveFront = (frontTotal/5);            // Distance from the wall in front of robot, determines a hard left turn
+  float distAveSideFront = (sideFrontTotal/5);    // Distance from the wall to the side of the robot, used for navigation 
+  float distAveSideRear = (sideRearTotal/5);
   turn (distAveFront, distAveSideFront, distAveSideRear);
   //Serial.print(distAveSideRear);                //Diagnostic tool
   //Serial.println(); 
@@ -107,25 +111,16 @@ float pingWall (int pingPin)                              // Ping signal
 
 void turn(float distAveFront, float distAveSideFront, float distAveSideRear)                // Use average distances to determine which way to turn 
 {
-    if (distAveSideFront > 20 && distAveSideRear - distAveSideFront < 7 ){
-      right();
-    }
-    else if (distAveSideFront < 18 && distAveSideFront - distAveSideRear < 7){
-      left();
-    }
-    else if (distAveFront > 24)
+    if (distAveFront > 24)
     {
       float distAveSide = ((distAveSideFront + distAveSideRear) / 2);
-      Serial.print(distAveSideFront);                //Diagnostic tool
-      Serial.print(distAveSideRear);                //Diagnostic tool
-      Serial.println(); 
-      //if (distAveSide > 11) //casey had 11
-      if (distAveSideFront > (distAveSideRear - 0.4))
+      //Serial.print(distAveSide);                //Diagnostic tool
+      //Serial.println(); 
+      if (distAveSide > 11)
       {
         right();
       }
-      // else if (distAveSide < 10) // casey had 10
-      else if (distAveSideFront < (distAveSideRear + 0.4))
+      else if (distAveSide < 10)
       {
         left();
       }
@@ -150,12 +145,9 @@ void left()                                                // Cuts out the left 
 
 void hardleft()                                            // Cuts out the left motor to turn the robot hard to the left
 {                                                          // when a wall is detected to the front
- SetSpeed(0, false, 0);
+ SetSpeed(0, false, 37);
  SetSpeed(1, false, 45);
- delay(100);
- SetSpeed(0, true, 45);
- SetSpeed(1, false, 45);
- delay(500);
+ delayMicroseconds(4500);                                  //Time delay to complete 90 degree turn
 }
 
 void right()                                               // Cuts out the right motor to turn the robot right

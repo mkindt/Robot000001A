@@ -1,0 +1,4 @@
+#!/bin/sh
+
+APPDIR=$(dirname "$0")
+java  -Djava.library.path="$APPDIR" -cp "$APPDIR/lib/virtual_robot_processing.jar:$APPDIR/lib/core.jar" virtual_robot_processing

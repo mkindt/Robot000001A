@@ -3,17 +3,41 @@
  
 #define TXPIN 12                                  // Define pins you're using for serial communication
 #define RXPIN 13                                  // Do not use pins 0 or 1 as they are reserved for
-                                                  // standard I/O and programming 
-                                                  
+    // 9 to 23                                              // standard I/O and programming 
+    // 8 to 24
+    //10 to 22    
 SoftwareSerial pololu(RXPIN, TXPIN);              // Create an instance of the software serial
-                                                  // communication object. This represents the
+
+char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
+// north distances to front wall(inches): 50.25, 47.25, 44.25, 41.25, 38.25, 35.25
+// north distances to rear wall(inches): 43.75, 46.75, 49.75, 52.75, 55.75, 58.75
+// east distances to front wall(inches): 39, 36, 33, 30, 27, 24
+// east distances to rear wall(inches): 8.5, 11.5, 14.5, 17.5, 20.5, 23.5
+// south distances to front wall(inches): 
+// south distances to rear wall(inches):
+// 3 inches = 7.62cm
+// first six are traveling north, last six are traveling east
+//total north = 94.5 inches
+float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
+float disR[] = { 103.0, 110.0, 117.0, 124.0, 131.0, 138.0 };
+class Space {
+  public:
+    Space();
+    int getColor();
+    int color;
+    boolean filled;   
+};
+Space s[12];
+int www = s[5].color;
+int rrr = s[5].getColor();
+ 
+                                                // communication object. This represents the
 int topSpeed = 85;                                // interface with the TReX Jr device
 int northCount = 0;
 int hardLeftCount = 0;
 long QTIref = 1200;
 
-void setup()                                      // Main application entry point
-{
+void setup() {                                     // Main application entry point
   pinMode(RXPIN, INPUT);                          // Define the appropriate input/output pins
   pinMode(TXPIN, OUTPUT);
   
@@ -21,8 +45,15 @@ void setup()                                      // Main application entry poin
   pololu.begin(19200);
 }
 
-void loop()
-{
+void loop() {
+  Serial.print(s[5].color);
+  // check 
+  //  check distance from side wall -- is inside of:
+  // check distance from front/back wall -- is inside of:
+  // check location on loop -- is inside of:
+   // check progress of deliveries
+  
+  
   // need to calibrate QTI beforehand to get black versus colors/white...
   float frontTotal = 0.00;
   float sideFrontTotal = 0.00;  
@@ -38,7 +69,7 @@ void loop()
   // having the gripper down destroys side measurements
   float cmF = medianer(cmFarray);     */ 
     float pulse = pulseIn(4, HIGH);
-    float pulse2 = pulseIn(4, HIGH);
+    float pulse2 = pulseIn(5, HIGH);
     float cmF = pulse * 0.0173;
     float cmR = pulse2 * 0.0173;
     
@@ -46,14 +77,14 @@ void loop()
   if (hardLeftCount == 1) { //west
     straight();
     if (cmF < 24){
-      hardleft();
+      hardleft(1);
     }
     
   }
    else if (hardLeftCount == 2) { //south
      straight();
      if (cmF < 24){
-      hardleft();
+      hardleft(2);
     }
    }
    else if (hardLeftCount > 2) { //east
@@ -62,13 +93,13 @@ void loop()
    }
   else if (hardLeftCount == 0) {
     if (cmF < 24){
-      hardleft();
+      hardleft(0);
     }
     if (cmF > 140){
       northCount = 0;
     }
     if (cmF < 85 && northCount > 4){
-      hardleft();
+      hardleft(0);
       northCount = 0;
     }
     for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
@@ -89,35 +120,35 @@ void loop()
     //Serial.println();
     
     // north motion -- not getting zero sometimes
-    if (cmF > 132 && northCount == 0){
+    if (cmF > disF[0] && northCount == 0){
       turn (distAveFront, distAveSideFront, distAveSideRear);
     }
-    else if (cmF < 132 && northCount == 0) { // && RCTime(11) < QTIref) { // < 8000){
+    else if (cmF < disF[0] && cmR >disR[0]-10.0 && northCount == 0) { // && RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 122 && northCount == 1) { //&& RCTime(11) < QTIref) { // < 8000){
+    else if (cmF < disF[1] && cmR >disR[1]-10.0 && northCount == 1) { //&& RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 114 && northCount == 2){ //&& RCTime(11) < QTIref) { // < 8000){
+    else if (cmF < disF[2] && cmR >disR[2]-10.0 && northCount == 2){ //&& RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 107 && northCount == 3){ //&& RCTime(11) < QTIref) { // < 8000){
+    else if (cmF < disF[3] && cmR >disR[3]-10.0 && northCount == 3){ //&& RCTime(11) < QTIref) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 99 && northCount == 4){ //&& RCTime(11) < QTIref - 1000) { // < 8000){
+    else if (cmF < disF[4] && cmR >disR[4]-10.0 && northCount == 4){ //&& RCTime(11) < QTIref - 1000) { // < 8000){
       freeze();
       delay(600);
       northCount++;
     }
-    else if (cmF < 91 && northCount == 5){ // && RCTime(11) < QTIref - 1000) { // < 8000){
+    else if (cmF < disF[5] && cmR >disR[5]-10.0 && northCount == 5){ // && RCTime(11) < QTIref - 1000) { // < 8000){
       freeze();
       delay(600);
       northCount++;
@@ -134,8 +165,7 @@ void loop()
  // END OF VOID LOOP!!! 
 
 
-void turn(float distAveFront, float distAveSideFront, float distAveSideRear) 
-{
+void turn(float distAveFront, float distAveSideFront, float distAveSideRear) {
     if (distAveSideFront > 17 && distAveSideRear - distAveSideFront < 7 ){ // 20 AND 7 originally
       right();
     }
@@ -164,15 +194,26 @@ void turn(float distAveFront, float distAveSideFront, float distAveSideRear)
     
 }
     
-void left()                                                // Cuts out the left motor to turn the robot left
-{
+void left() {                                                // Cuts out the left motor to turn the robot left
  SetSpeed(0, false, int(topSpeed*0.8)); //74
  SetSpeed(1, false, topSpeed); //90
  //delayMicroseconds(500);
 }
 
-void hardleft()                                            // Cuts out the left motor to turn the robot hard to the left
-{                                                          // when a wall is detected to the front
+void hardleft(int NWSE_0123) {  // Cuts out the left motor to turn the robot hard to the left
+ int minF, maxF, minR, maxR;
+ if (NWSE_0123 == 0){                                                  // when a wall is detected to the front
+   minF = 24;
+   maxF = 105;
+   minR = 0;
+   maxR = 0; 
+ }
+ else if (NWSE_0123 != 0) {
+   minF = 24;
+   maxF = 105;
+   minR = 0;
+   maxR = 0;
+ }
  SetSpeed(0, false, 0);
  SetSpeed(1, false, int(topSpeed)); //90 // 45);
  delay(100); //100
@@ -181,7 +222,7 @@ void hardleft()                                            // Cuts out the left 
  delay(500);
  float pulse = pulseIn(4, HIGH);
  float cmF = pulse * 0.0173;
- while (cmF < 24 || cmF > 105) {// Sonar ping from the front sensor
+ while (cmF < minF || cmF > maxF) {// Sonar ping from the front sensor
    delay(30);
    pulse = pulseIn(4, HIGH);
    cmF = pulse * 0.0173; 
@@ -189,37 +230,30 @@ void hardleft()                                            // Cuts out the left 
  hardLeftCount++;
 }
 
-void right()                                               // Cuts out the right motor to turn the robot right
-{
+void right() {                                              // Cuts out the right motor to turn the robot right
  SetSpeed(0, false, topSpeed); // 45);
  SetSpeed(1, false, int(topSpeed*0.8)); //37);
  //delayMicroseconds(250);
 }
 
-void straight()                                            // Both motors on to go straight
-{
+void straight() {                                           // Both motors on to go straight
  SetSpeed(0, false, topSpeed); // 45);
  SetSpeed(1, false, topSpeed);
 }
 
-void freeze(){
+void freeze() {
   SetSpeed(0, false, 0);
   SetSpeed(1, false, 0);
 }
 
-void movement(){
+void movement() {
     float frontTotal = 0.00;
   float sideFrontTotal = 0.00;  
   float sideRearTotal = 0.00; 
     // Sonar ping from the front sensor
-   if (cmF < 24){
-      hardleft();
-    }
-  for (int var = 1; var <= 3; ++var)
-  {                   
+  for (int var = 1; var <= 3; ++var) {                   
     float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
     float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
-    frontTotal = (frontTotal + cmF);
     sideFrontTotal = (sideFrontTotal + cmSF);
     sideRearTotal = (sideRearTotal + cmSR);  
   }
@@ -229,7 +263,7 @@ void movement(){
 }
 
 // ______QTI____________________
-long RCTime(int sensorIn){
+long RCTime(int sensorIn) {
   long duration = 0;
   pinMode(sensorIn, OUTPUT); // Make pin OUTPUT
   digitalWrite(sensorIn, HIGH); // Pin HIGH (discharge capacitor)
@@ -246,8 +280,7 @@ long RCTime(int sensorIn){
 // Motor index should either be a 0 or 1
 // Direction should be either true for forward or false for backwards
 // Speed should range between 0 and 127 (inclusivly)
-void SetSpeed(int MotorIndex, boolean Forward, int Speed)
-{
+void SetSpeed(int MotorIndex, boolean Forward, int Speed) {
   if(MotorIndex < 0 || MotorIndex > 1)            // Validate motor index
     return;
  
@@ -266,20 +299,16 @@ void SetSpeed(int MotorIndex, boolean Forward, int Speed)
     SendByte--;                                   // but minus one
                                                   // Send the set speed command byte
                                                   // pololu.print(SendByte, BYTE);
-  pololu.write(SendByte);
-                                                  // Send the speed data byte
-                                                  // pololu.print(Speed, BYTE);}
-  pololu.write(Speed);
+  pololu.write(SendByte);                         // Send the speed data byte
+  pololu.write(Speed);                            // pololu.print(Speed, BYTE);}
 }
 
 // SONAR FUNCTIONS::::::::::::::::::::::::::::::::::::  
-float microsecondsToCentimeters(long microseconds)        // converts duration of PING signal return to a distance value
-{
+float microsecondsToCentimeters(long microseconds) {       // converts duration of PING signal return to a distance value
   return microseconds / 29.387 / 2;
 }
 
-float pingWall (int pingPin)                              // Ping signal
-{
+float pingWall (int pingPin) {                             // Ping signal
   pinMode(pingPin, OUTPUT);                               // Same pin is used as input and output
   digitalWrite(pingPin, LOW);                             // Low signal to ensure a clean high signal
   delayMicroseconds(500);
@@ -301,5 +330,12 @@ float medianer (float *x) {
     }
   }
   return x[1]; // length divided by 2?
+}
+Space::Space() {
+  color = 0;
+  filled = 0;
+}
+int Space::getColor() {
+  return color;
 }
 
