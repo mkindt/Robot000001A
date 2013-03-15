@@ -1,15 +1,23 @@
 
 float prevCm = 1000;
-// includes Nick Pelone's debugPrint for bluetooth 
+// includes Nick Pelone's debugPrint for bluetooth
+int frontSonarTrigger = 52;
+int rearSonarTrigger = 53;
+
 void setup(){
  Serial.begin(9600);
  Serial1.begin(115200);
+ pinMode(frontSonarTrigger, OUTPUT);
+ pinMode(rearSonarTrigger, OUTPUT);
 }
 
 void loop(){
+ digitalWrite(frontSonarTrigger, LOW);
+ digitalWrite(rearSonarTrigger, LOW);
  pinMode(4, INPUT);
  //pinMode(5, INPUT);
  float cmFArray[3];
+ digitalWrite(frontSonarTrigger, HIGH);
   for (int i = 0; i < 3; ++i){  // too slow!!!
     float pulse = pulseIn(4, HIGH);
     cmFArray[i] = pulse * 0.0173; 
