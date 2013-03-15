@@ -5,8 +5,8 @@ void setup(){
 }
 
 void loop(){
-  float sideFrontTotal;
-  float sideRearTotal;
+  float sideFrontTotal = 0;
+  float sideRearTotal = 0;
  for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
       //float cmF2 = pingWall(4);
       // if (cmF2 > cmF){
