@@ -7,7 +7,8 @@
     // 8 to 24
     //10 to 22    
 SoftwareSerial pololu(RXPIN, TXPIN);              // Create an instance of the software serial
-
+int frontSonarTrigger = 52;
+int rearSonarTrigger = 53;
 char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
 // north distances to front wall(inches): 50.25, 47.25, 44.25, 41.25, 38.25, 35.25
 // north distances to rear wall(inches): 43.75, 46.75, 49.75, 52.75, 55.75, 58.75
@@ -44,6 +45,8 @@ int start = 0;
 void setup() {                                     // Main application entry point
   pinMode(RXPIN, INPUT);                          // Define the appropriate input/output pins
   pinMode(TXPIN, OUTPUT);
+  pinMode(frontSonarTrigger, OUTPUT);
+  pinMode(rearSonarTrigger, OUTPUT);
   
   Serial.begin(9600);                             // Begin communicating with the pololu interface
   pololu.begin(19200);
@@ -51,6 +54,8 @@ void setup() {                                     // Main application entry poi
 }
 
 void loop() {
+  digitalWrite(frontSonarTrigger, LOW);
+  digitalWrite(rearSonarTrigger, LOW);
   if (start == 0) { //startup calibration for sonars
     delay(1000);
     start = 1;
@@ -76,7 +81,8 @@ void loop() {
     cmFarray[i] = pulse * 0.0173;
   }
   // having the gripper down destroys side measurements
-  float cmF = medianer(cmFarray);     */ 
+  float cmF = medianer(cmFarray);     */
+    digitalWrite(frontSonarTrigger, HIGH);
     float pulse = pulseIn(4, HIGH);
     //float pulse2 = pulseIn(5, HIGH);
     float cmF = pulse * 0.0173;
@@ -85,9 +91,12 @@ void loop() {
       delay(100);
       pulse = pulseIn(4, HIGH);
       cmF = pulse * 0.0173;
-     //Serial.print("rear is ");
-     //Serial.print(cmR);
+     Serial.print("correction is ");
+     Serial.print(cmF);
     }
+  digitalWrite(frontSonarTrigger, LOW);
+  Serial.print("front is ");
+  Serial.print(cmF);
   prevCm = cmF;
   if (start == 1) { //startup calibration for timer
     timeRef = millis();
@@ -130,7 +139,7 @@ void loop() {
       hardleft(0);
       northCount = 0;
     }
-    for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
+    /*for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
       //float cmF2 = pingWall(4);
       // if (cmF2 > cmF){
       //    cmF = cmF2;
@@ -140,10 +149,12 @@ void loop() {
       // frontTotal = (frontTotal + cmF);
       sideFrontTotal = (sideFrontTotal + cmSF);     // Adds the values in preparation for averaging, average value of 5
       sideRearTotal = (sideRearTotal + cmSR);       // distance readings are used to minimize 'hunting' and overcompensation while turning
-    }
+    } */
+    float distAveSideFront = pingWall(3); 
+    float distAveSideRear = pingWall(2);
     float distAveFront = 30; // = (frontTotal/3);            // Distance from the wall in front of robot, determines a hard left turn
-    float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
-    float distAveSideRear = (sideRearTotal/3);
+    //float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
+    //float distAveSideRear = (sideRearTotal/3);
     Serial.print(distAveSideFront);
     Serial.print(" ");
     Serial.print(distAveSideRear);
@@ -154,17 +165,17 @@ void loop() {
       turn (distAveFront, distAveSideFront, distAveSideRear);
     }
     else if (cmF > disF[0] && northCount == 0 && millis() > timeRef + 1200) {
-      topSpeed = 60;
+      topSpeed = 70;
       turn (distAveFront, distAveSideFront, distAveSideRear);
     }
     else if (cmF < disF[0]-10 && cmR >disR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000){
-      topSpeed = 60;
+      topSpeed = 70;
       freeze();
       delay(600);
       northCount++;
     }
     else if (cmF < disF[1]-10 && cmR >disR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000){
-      topSpeed = 60;
+      topSpeed = 70;
       freeze();
       delay(600);
       northCount++;
@@ -204,26 +215,37 @@ void loop() {
 void turn(float distAveFront, float distAveSideFront, float distAveSideRear) {
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
-    if (distAveSideFront > 17 ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
-      right();
-      delay(100);
+    if (distAveSideFront > 14 && distAveSideRear - distAveSideFront > 5 ){// 20 AND 7 originally
       straight();
+      //delay(100);
+      //straight();
     }
     // if 
-    else if (distAveSideFront < 15 ){ //&& distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
-      left();
-      delay(100);
+    else if (distAveSideFront < 11 && distAveSideFront - distAveSideRear > 5){ // 18 AND 7 originally
       straight();
+      //delay(100);
+      //straight();
+    }
+    else if (distAveSideFront > 14 ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
+      right();
+      //delay(100);
+      //straight();
+    }
+    // if 
+    else if (distAveSideFront < 11 ){ //&& distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
+      left();
+      //delay(100);
+      //straight();
     }
     else // if (distAveFront > 24) // smaller parallel adjustments
     {
-      if (distAveSideFront > (distAveSideRear - 0.4))
+      if (distAveSideFront > (distAveSideRear - 1)) //0.4))
       {
-        right();
+        fineRight();
       }
-      else if (distAveSideFront < (distAveSideRear + 0.4))
+      else if (distAveSideFront < (distAveSideRear + 1)) //0.4))
       {
-        left();
+        fineLeft();
       }
       else
       {
@@ -273,19 +295,30 @@ void hardleft(int NWSE_0123) {  // Cuts out the left motor to turn the robot har
 void left() {                                                // Cuts out the left motor to turn the robot left
  SetSpeed(0, false, int(topSpeed*0.7)); //74
  SetSpeed(1, false, topSpeed); //90
- delay(100);
+ //delay(100);
 }
 
 void right() {                                              // Cuts out the right motor to turn the robot right
  SetSpeed(0, false, topSpeed); // 45);
  SetSpeed(1, false, int(topSpeed*0.7)); //37);
- delay(100);
+ //delay(100);
+}
+void fineLeft() {                                                // Cuts out the left motor to turn the robot left
+ SetSpeed(0, false, int(topSpeed*0.9)); //74
+ SetSpeed(1, false, topSpeed); //90
+ //delay(100);
+}
+
+void fineRight() {                                              // Cuts out the right motor to turn the robot right
+ SetSpeed(0, false, topSpeed); // 45);
+ SetSpeed(1, false, int(topSpeed*0.9)); //37);
+ //delay(100);
 }
 
 void straight() {                                           // Both motors on to go straight
  SetSpeed(0, false, topSpeed); // 45);
  SetSpeed(1, false, topSpeed);
- delay(100);
+ //delay(100);
 }
 
 void freeze() {
