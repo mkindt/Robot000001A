@@ -121,7 +121,7 @@ void loop() {
    else if (hardLeftCount == 2) { //south
      straight();
      if (cmF < 24){
-      hardleft(2);
+      hardleft(1);
     }
    }
    else if (hardLeftCount > 2) { //east
@@ -216,13 +216,13 @@ void turn(float distAveFront, float distAveSideFront, float distAveSideRear) {
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
     if (distAveSideFront > 14 && distAveSideRear - distAveSideFront > 5 ){// 20 AND 7 originally
-      straight();
+      straight(); //if already turned, don't turn more
       //delay(100);
       //straight();
     }
     // if 
     else if (distAveSideFront < 11 && distAveSideFront - distAveSideRear > 5){ // 18 AND 7 originally
-      straight();
+      straight(); //if already turned, don't turn more
       //delay(100);
       //straight();
     }
@@ -262,17 +262,17 @@ void turn(float distAveFront, float distAveSideFront, float distAveSideRear) {
 
 
 void hardleft(int NWSE_0123) {  // Cuts out the left motor to turn the robot hard to the left
- topSpeed = 90;
+ topSpeed = 110;
  int minF, maxF, minR, maxR;
  if (NWSE_0123 == 0){                                                  // when a wall is detected to the front
-   minF = 24;
-   maxF = 105;
+   minF = 48;
+   maxF = 94;
    minR = 0;
    maxR = 0; 
  }
  else if (NWSE_0123 != 0) {
-   minF = 24;
-   maxF = 105;
+   minF = 100; //24;
+   maxF = 160; //105;
    minR = 0;
    maxR = 0;
  }
@@ -282,14 +282,19 @@ void hardleft(int NWSE_0123) {  // Cuts out the left motor to turn the robot har
  SetSpeed(0, true, topSpeed*0.6);
  SetSpeed(1, false, topSpeed);
  delay(500);
+ digitalWrite(frontSonarTrigger, HIGH);
  float pulse = pulseIn(4, HIGH);
  float cmF = pulse * 0.0173;
  while (cmF < minF || cmF > maxF) {// Sonar ping from the front sensor
-   delay(30);
+   delay(10);
    pulse = pulseIn(4, HIGH);
    cmF = pulse * 0.0173; 
  }
+ digitalWrite(frontSonarTrigger, LOW);
+ SetSpeed(0, true, 0);
+ SetSpeed(1, false, 0);
  hardLeftCount++;
+ delay(200);
 }
 
 void left() {                                                // Cuts out the left motor to turn the robot left
