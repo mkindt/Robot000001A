@@ -19,19 +19,26 @@ char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}
 // 3 inches = 7.62cm
 // first six are traveling north, last six are traveling east
 //total north = 94.5 inches
-float disF[] = { 115.6, 108.0, 100.4, 92.8, 85.2, 77.5 }; // eastLocF[]
+float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.2, 77.5 };//adjusted for center of robot
+float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for center of robot
+float eastLocR[] = { 103.0, 110.0, 117.0, 124.0, 131.0, 138.0 };
 //float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
 float disR[] = { 103.0, 110.0, 117.0, 124.0, 131.0, 138.0 };
-class Space {
-  public:
-    Space();
-    int getColor();
-    int color;
-    boolean filled;   
-};
-Space s[12];
-int www = s[5].color;
-int rrr = s[5].getColor();
+// char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
+// int eastColorLoc[] = { 0, 0, 0, 0, 0, 0 };
+// int southColorLoc[] = { 0, 0, 0, 0, 0, 0 }; 
+// colors below will be measured and recorded in first passes unless we have access to competition boards
+// colorLoc indexes eastLocF and eastLocR: i.e. eastLocF[colorLoc[RED]]
+// testing order is green = 0th, orange = 1st, blue = 2nd, brown = 3rd, yellow = 4th, red = 5th
+int eastColorLoc[] = { 5, 2, 4, 0, 1, 3 };
+int southColorLoc[] = { 5, 2, 4, 0, 1, 3 };
+// block draw location : 0 = 728.65
+float loadingLoc[] = { 138.11, 130.5, 122.87, 115.25, 107.63, 100.01, 92.39, 84.77, 77.15, 69.53, 61.91, 54.29, 46.67, 39.05, 0, 0};
+int blockCount = 0; //tracks number of blocks picked up / delivered
+int blockSize = 0; // 0 for air/default, 1 for south, 2 for east
+int testLoadingColors[] = { 0, 2, 0, 2, 5, 1, 4, 3, 0, 2, 5, 1, 4, 3 }; // needed only for testing nav
+int testLoadingSize[] =   { 0, 1, 2, 0, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1 }; // needed only for testing nav
+int currentBlockColor = -1; // (0-5)
 unsigned long timeRef;
 unsigned long time;
 float prevCm = 1000;                               // communication object. This represents the
@@ -40,7 +47,9 @@ int northCount = 0;
 int hardLeftCount = 0;
 long QTIref = 1000;
 float cmR = 1000;
+float cmF = 1000;
 int start = 0;
+int hardLeftTurnCounter = 0;
 
 void setup() {                                     // Main application entry point
   pinMode(RXPIN, INPUT);                          // Define the appropriate input/output pins
@@ -60,41 +69,23 @@ void loop() {
     delay(1000);
     start = 1;
   }
-  Serial.print(s[5].color);
-  // check 
-  //  check distance from side wall -- is inside of:
-  // check distance from front/back wall -- is inside of:
-  // check location on loop -- is inside of:
-   // check progress of deliveries
-  
-  
   // need to calibrate QTI beforehand to get black versus colors/white...
-  float frontTotal = 0.00;
-  float sideFrontTotal = 0.00;  
-  float sideRearTotal = 0.00; 
+  //Serial.println(RCTime(11));
   pinMode(4, INPUT);
   //pinMode(5, INPUT);
-  //Serial.println(RCTime(11));
-  /* float cmFarray[3];
-  for (int i = 0; i < 3; ++i){  // too slow!!!
-    float pulse = pulseIn(4, HIGH);
-    cmFarray[i] = pulse * 0.0173;
+  digitalWrite(frontSonarTrigger, HIGH); //turn on front sonar
+  float pulse = pulseIn(4, HIGH);
+  //float pulse2 = pulseIn(5, HIGH);
+  float cmF = pulse * 0.0173;
+  //float cmR = pulse2 * 0.0173;
+  if (cmF < prevCm - 8 || cmF > prevCm) {
+    delay(100);
+    pulse = pulseIn(4, HIGH);
+    cmF = pulse * 0.0173;
+   Serial.print("correction is ");
+   Serial.print(cmF);
   }
-  // having the gripper down destroys side measurements
-  float cmF = medianer(cmFarray);     */
-    digitalWrite(frontSonarTrigger, HIGH);
-    float pulse = pulseIn(4, HIGH);
-    //float pulse2 = pulseIn(5, HIGH);
-    float cmF = pulse * 0.0173;
-    //float cmR = pulse2 * 0.0173;
-    if (cmF < prevCm - 8 || cmF > prevCm) {
-      delay(100);
-      pulse = pulseIn(4, HIGH);
-      cmF = pulse * 0.0173;
-     Serial.print("correction is ");
-     Serial.print(cmF);
-    }
-  digitalWrite(frontSonarTrigger, LOW);
+  digitalWrite(frontSonarTrigger, LOW); //turn off front sonar
   Serial.print("front is ");
   Serial.print(cmF);
   prevCm = cmF;
@@ -109,162 +100,259 @@ void loop() {
       start = 3;
     }
   }
-    
-  //float cmF = pingWall(4);   // Sonar ping from the front sensor
-  if (hardLeftCount == 1) { //west
-    straight();
-    if (cmF < 24){
-      hardleft(1);
-    }
-    
+ //////START OF MAIN STATES/////
+  if (hardLeftCount == 0) {
+    readEastColors();
   }
-   else if (hardLeftCount == 2) { //south
-     straight();
-     if (cmF < 24){
-      hardleft(1);
-    }
-   }
-   else if (hardLeftCount > 2) { //east
-    freeze();
-    
-   }
-  else if (hardLeftCount == 0) {
-    if (cmF < 24){
-      hardleft(0);
-    }
-    if (cmF > 140){
-      northCount = 0;
-    }
-    if (cmF < 85 && northCount > 4){
-      hardleft(0);
-      northCount = 0;
-    }
-    /*for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
-      //float cmF2 = pingWall(4);
-      // if (cmF2 > cmF){
-      //    cmF = cmF2;
-      // }   
-      float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
-      float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
-      // frontTotal = (frontTotal + cmF);
-      sideFrontTotal = (sideFrontTotal + cmSF);     // Adds the values in preparation for averaging, average value of 5
-      sideRearTotal = (sideRearTotal + cmSR);       // distance readings are used to minimize 'hunting' and overcompensation while turning
-    } */
-    float distAveSideFront = pingWall(3); 
-    float distAveSideRear = pingWall(2);
-    float distAveFront = 30; // = (frontTotal/3);            // Distance from the wall in front of robot, determines a hard left turn
-    //float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
-    //float distAveSideRear = (sideRearTotal/3);
-    Serial.print(distAveSideFront);
-    Serial.print(" ");
-    Serial.print(distAveSideRear);
+  else if (hardLeftCount == 50) {
+    meltDown();
+  }
+  else if ((hardLeftCount - 1)%4 == 0) { //(hardLeftCount == 1)
+    goWest();
+  }
+  else if ((hardLeftCount - 2)%4 == 0) { //(hardLeftCount == 2)
+    goSouthForBlock();
+  }
+  else if ((hardLeftCount - 3)%4 == 0) { //(hardLeftCount == 3)
+    goEast();
+  }
+   else if ((hardLeftCount - 4)%4 == 0) { //(hardLeftCount == 4)
+    goNorth();
+  }
+}
+
+void goWest() {
+  straight();
+  if (cmF < 24){
+    hardLeft(1);
+  }
+}
+
+void goSouthForBlock() {
+  switch(blockSize) {
+    case 0:  // air block and default case 
+      // pick up blocks on hardLeftCount == 2, 6, 10, 14, 18, 22, ... when (HLC - 2)%4 ==0
+      if (cmF > loadingLoc[blockCount]) {
+        parallelMove(110);
+      }
+      else if (cmF < (loadingLoc[blockCount] - 3)) {
+        pickUpBlock();
+      }
+      else {
+        parallelMove(80);
+      }
+      break;
+    case 1:  // south block
+      if (cmF > 24.0) { //ideally 25.5
+        parallelMove(5);
+      }
+      else if (cmF <= 24.0) {
+        hardLeft(1);
+      }
+      break;
+    case 2: // eastern bloc
+      if (cmF > 112) {
+        parallelMove(110);
+      }
+      else if (cmF <= 112) {
+        hardLeft(1);
+      }
+      break;
+  }
+}
+
+void goEast() {
+  switch(blockSize) {
+    case 0:
+      Serial.print("error in goEast");
+      break;
+    case 1: // deliver south block
+      if (cmF > southLocF[southColorLoc[currentBlockColor]]) {
+        parallelMove(80);
+      }
+      else if (cmF <= southLocF[southColorLoc[currentBlockColor]]) {
+        dropOffBlock();
+        while (cmF > 25.5) {  //southLocF[5]) {
+          parallelMove(70);
+        }
+        hardLeft(1);
+      }
+      break;
+    case 2: //deliver east block
+      if (cmF > 25.5) {
+        straight(); //parallelMove(110);
+      }
+      else if (cmF <= 25.5) {
+        hardLeft(1);
+      }
+      break;
+  }
+}
+
+void goNorth() {
+  switch(blockSize) {
+    case 1:
+      if (cmF > (240-loadingLoc[blockCount])) {
+        parallelMove(110); // speed 5
+      }
+      else if (cmF <= (240-loadingLoc[blockCount])) {
+        hardLeft(1);
+      }
+      break;
+    case 2:
+      if (cmF > eastLocF[eastColorLoc[currentBlockColor]]) {
+        parallelMove(80); // speed 2
+      }
+      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]]) {
+        dropOffBlock();
+        while (cmF > 85) {
+          parallelMove(110);  //speed 5
+        }
+        hardLeft(1);
+      }
+      break;
+  }
+}
+
+void pickUpBlock() {
+  blockSize = testLoadingSize[blockCount];
+  currentBlockColor = testLoadingColors[blockCount];
+  if (blockSize == 0) { // air block
+    Serial.print("air block rejected, saving location");
     Serial.println();
-    
-    // north motion -- not getting zero sometimes
-    if (cmF > disF[0]+20 && northCount == 0){
-      turn (distAveFront, distAveSideFront, distAveSideRear);
+    if (loadingLoc[14] == 0) {
+      loadingLoc[14] = loadingLoc[blockCount];
+      Serial.print("location ");
+      Serial.print(loadingLoc[14]);
+      Serial.println();
     }
-    else if (cmF > disF[0] && northCount == 0 && millis() > timeRef + 1200) {
-      topSpeed = 70;
-      turn (distAveFront, distAveSideFront, distAveSideRear);
+    else {
+      loadingLoc[15] = loadingLoc[blockCount];
+      Serial.print("location ");
+      Serial.print(loadingLoc[15]);
+      Serial.println();
     }
-    else if (cmF < disF[0]-10 && cmR >disR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000){
-      topSpeed = 70;
-      freeze();
-      delay(600);
-      northCount++;
-    }
-    else if (cmF < disF[1]-10 && cmR >disR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000){
-      topSpeed = 70;
-      freeze();
-      delay(600);
-      northCount++;
-    }
-    else if (cmF < disF[2]-10 && cmR >disR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref) { // < 8000){
-      freeze();
-      delay(600);
-      northCount++;
-    }
-    else if (cmF < disF[3]-10 && cmR >disR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref) { // < 8000){
-      freeze();
-      delay(600);
-      northCount++;
-    }
-    else if (cmF < disF[4]-10 && cmR >disR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref) { // < 8000){
-      freeze();
-      delay(600);
-      northCount++;
-    }
-    else if (cmF < disF[5]-10 && cmR >disR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref) { // < 8000){
-      freeze();
-      delay(600);
-      northCount++;
-    }
-    else{
-      turn (distAveFront, distAveSideFront, distAveSideRear);
-      //QTIref = RCTime(11);
-      //QTIref = (QTIref + RCTime(11))/2 ;
-    }
-    //Serial.print(northCount);
-    Serial.println();  
-   }
+    dropOffBlock();
+  }
+  blockCount = blockCount + 1;
+  delay(1000);
+}
+
+void dropOffBlock() {
+  currentBlockColor = 0;
+  delay(1000);
+}
+
+void readEastColors() {
+  if (cmF < 24){
+    hardLeft(0);
+  }
+  if (cmF > 140){
+    northCount = 0;
+  }
+  if (cmF < 85 && northCount > 4){
+    hardLeft(0);
+    northCount = 0;
+  }
+  // north motion -- not getting zero sometimes
+  if (cmF > eastLocF[0]+20 && northCount == 0){
+    parallelMove(110);
+  }
+  else if (cmF > eastLocF[0] && northCount == 0 && millis() > timeRef + 1200) {
+    parallelMove(70);
+  }
+  else if (cmF < eastLocF[0]-10 && cmR >disR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000)
+    topSpeed = 70;
+    freeze();
+    delay(600);
+    northCount++;
+  }
+  else if (cmF < eastLocF[1]-10 && cmR >disR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000)
+    topSpeed = 70;
+    freeze();
+    delay(600);
+    northCount++;
+  }
+  else if (cmF < eastLocF[2]-10 && cmR >disR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref) { // < 8000)
+    freeze();
+    delay(600);
+    northCount++;
+  }
+  else if (cmF < eastLocF[3]-10 && cmR >disR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref) { // < 8000)
+    freeze();
+    delay(600);
+    northCount++;
+  }
+  else if (cmF < eastLocF[4]-10 && cmR >disR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref) { // < 8000)
+    freeze();
+    delay(600);
+    northCount++;
+  }
+  else if (cmF < eastLocF[5]-10 && cmR >disR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref) { // < 8000)
+    freeze();
+    delay(600);
+    northCount++;
+  }
+  else{
+    parallelMove(70);
+    //QTIref = RCTime(11);
+    //QTIref = (QTIref + RCTime(11))/2 ;
+  }
+  //Serial.print(northCount);
+  Serial.println();  
  }
- // END OF VOID LOOP!!! 
 
-
-void turn(float distAveFront, float distAveSideFront, float distAveSideRear) {
+void parallelMove(int SetTopSpeed) {
+  if (start > 2) {
+    topSpeed = SetTopSpeed;
+  }
+  float distAveSideFront = pingWall(3); 
+  float distAveSideRear = pingWall(2);
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
-    if (distAveSideFront > 14 && distAveSideRear - distAveSideFront > 5 ){// 20 AND 7 originally
-      straight(); //if already turned, don't turn more
-      //delay(100);
-      //straight();
-    }
-    // if 
-    else if (distAveSideFront < 11 && distAveSideFront - distAveSideRear > 5){ // 18 AND 7 originally
-      straight(); //if already turned, don't turn more
-      //delay(100);
-      //straight();
-    }
-    else if (distAveSideFront > 14 ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
-      right();
-      //delay(100);
-      //straight();
-    }
-    // if 
-    else if (distAveSideFront < 11 ){ //&& distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
-      left();
-      //delay(100);
-      //straight();
-    }
-    else // if (distAveFront > 24) // smaller parallel adjustments
+  if (distAveSideFront > 14 && distAveSideRear - distAveSideFront > 5 ){// 20 AND 7 originally
+    straight(); //if already turned, don't turn more
+    //delay(100);
+    //straight();
+  }
+  // if 
+  else if (distAveSideFront < 11 && distAveSideFront - distAveSideRear > 5){ // 18 AND 7 originally
+    straight(); //if already turned, don't turn more
+    //delay(100);
+    //straight();
+  }
+  else if (distAveSideFront > 14 ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
+    right();
+    //delay(100);
+    //straight();
+  }
+  // if 
+  else if (distAveSideFront < 11 ){ //&& distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
+    left();
+    //delay(100);
+    //straight();
+  }
+  else // if (distAveFront > 24) // smaller parallel adjustments
+  {
+    if (distAveSideFront > (distAveSideRear - 1)) //0.4))
     {
-      if (distAveSideFront > (distAveSideRear - 1)) //0.4))
-      {
-        fineRight();
-      }
-      else if (distAveSideFront < (distAveSideRear + 1)) //0.4))
-      {
-        fineLeft();
-      }
-      else
-      {
-        straight();
-      }
+      fineRight();
     }
-    // else
-    // {
-    //    hardleft();
-    // }
-    
+    else if (distAveSideFront < (distAveSideRear + 1)) //0.4))
+    {
+      fineLeft();
+    }
+    else
+    {
+      straight();
+    }
+  }
 }
-    
 
-
-void hardleft(int NWSE_0123) {  // Cuts out the left motor to turn the robot hard to the left
+void hardLeft(int NWSE_0123) {
  topSpeed = 110;
  int minF, maxF, minR, maxR;
- if (NWSE_0123 == 0){                                                  // when a wall is detected to the front
+ if (NWSE_0123 == 0){
    minF = 48;
    maxF = 94;
    minR = 0;
@@ -285,42 +373,52 @@ void hardleft(int NWSE_0123) {  // Cuts out the left motor to turn the robot har
  digitalWrite(frontSonarTrigger, HIGH);
  float pulse = pulseIn(4, HIGH);
  float cmF = pulse * 0.0173;
- while (cmF < minF || cmF > maxF) {// Sonar ping from the front sensor
-   delay(10);
-   pulse = pulseIn(4, HIGH);
-   cmF = pulse * 0.0173; 
+ if (NWSE_0123 == 0){
+   while (cmF < minF || cmF > maxF) {// Sonar ping from the front sensor
+     hardLeftTurnCounter = hardLeftTurnCounter + 1;
+     delay(10);
+     pulse = pulseIn(4, HIGH);
+     cmF = pulse * 0.0173; 
+   }
+ }
+ else if (NWSE_0123 != 0) {
+   for (int k = 0; k < hardLeftTurnCounter; k++){
+     delay(10);
+     pulse = pulseIn(4, HIGH); // keep the timing symmetrical
+     cmF = pulse * 0.0173;
+   }
  }
  digitalWrite(frontSonarTrigger, LOW);
  SetSpeed(0, true, 0);
  SetSpeed(1, false, 0);
  hardLeftCount++;
- delay(200);
+ //delay(200);
 }
 
-void left() {                                                // Cuts out the left motor to turn the robot left
+void left() {
  SetSpeed(0, false, int(topSpeed*0.7)); //74
  SetSpeed(1, false, topSpeed); //90
  //delay(100);
 }
 
-void right() {                                              // Cuts out the right motor to turn the robot right
+void right() {
  SetSpeed(0, false, topSpeed); // 45);
  SetSpeed(1, false, int(topSpeed*0.7)); //37);
  //delay(100);
 }
-void fineLeft() {                                                // Cuts out the left motor to turn the robot left
+void fineLeft() {
  SetSpeed(0, false, int(topSpeed*0.9)); //74
  SetSpeed(1, false, topSpeed); //90
  //delay(100);
 }
 
-void fineRight() {                                              // Cuts out the right motor to turn the robot right
+void fineRight() {
  SetSpeed(0, false, topSpeed); // 45);
  SetSpeed(1, false, int(topSpeed*0.9)); //37);
  //delay(100);
 }
 
-void straight() {                                           // Both motors on to go straight
+void straight() {
  SetSpeed(0, false, topSpeed); // 45);
  SetSpeed(1, false, topSpeed);
  //delay(100);
@@ -329,22 +427,6 @@ void straight() {                                           // Both motors on to
 void freeze() {
   SetSpeed(0, false, 0);
   SetSpeed(1, false, 0);
-}
-
-void movement() {
-    float frontTotal = 0.00;
-  float sideFrontTotal = 0.00;  
-  float sideRearTotal = 0.00; 
-    // Sonar ping from the front sensor
-  for (int var = 1; var <= 3; ++var) {                   
-    float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
-    float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
-    sideFrontTotal = (sideFrontTotal + cmSF);
-    sideRearTotal = (sideRearTotal + cmSR);  
-  }
-  float distAveFront = 30; // = (frontTotal/50);  
-  float distAveSideFront = (sideFrontTotal/3); 
-  float distAveSideRear = (sideRearTotal/3);
 }
 
 // ______QTI____________________
@@ -371,12 +453,12 @@ void SetSpeed(int MotorIndex, boolean Forward, int Speed) {
  
   if(Speed < 0)                                   // Validate speed
     Speed = 0;
-  else if(Speed > 127)
-    Speed = 127;
+  else if(Speed > 120)
+    Speed = 120;
  
   unsigned char SendByte = 0;                     // Send the "set" command based on the motor
-  if(MotorIndex == 0)                             // Note that we do not accelerate to the
-    SendByte = 0xC6;    //accel C6  //set C2                       // speed, we just instantly set it
+  if(MotorIndex == 0)                             // Choose between accelerate and instantly set speed
+    SendByte = 0xC6;    //accel C6  //set C2
   else if(MotorIndex == 1)
     SendByte = 0xCE;    //accel CE  //set CA
  
@@ -416,11 +498,11 @@ float medianer (float *x) {
   }
   return x[1]; // length divided by 2?
 }
-Space::Space() {
-  color = 0;
-  filled = 0;
-}
-int Space::getColor() {
-  return color;
-}
+  
+void meltDown() {
+  freeze();
+  Serial.print("the end");
+  Serial.println();
+  delay(20000);
+} 
 
