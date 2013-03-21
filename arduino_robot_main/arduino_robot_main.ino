@@ -76,18 +76,18 @@ void loop() {
   digitalWrite(frontSonarTrigger, HIGH); //turn on front sonar
   float pulse = pulseIn(4, HIGH);
   //float pulse2 = pulseIn(5, HIGH);
-  float cmF = pulse * 0.0173;
+  cmF = pulse * 0.0173;
   //float cmR = pulse2 * 0.0173;
   if (cmF < prevCm - 8 || cmF > prevCm) {
-    delay(100);
+    delay(50);
     pulse = pulseIn(4, HIGH);
     cmF = pulse * 0.0173;
-   Serial.print("correction is ");
-   Serial.print(cmF);
+   //Serial.print("correction is ");
+   //Serial.print(cmF);
   }
   digitalWrite(frontSonarTrigger, LOW); //turn off front sonar
-  Serial.print("front is ");
-  Serial.print(cmF);
+  //Serial.print("front is ");
+  //Serial.print(cmF);
   prevCm = cmF;
   if (start == 1) { //startup calibration for timer
     timeRef = millis();
@@ -104,9 +104,9 @@ void loop() {
   if (hardLeftCount == 0) {
     readEastColors();
   }
-  else if (hardLeftCount == 50) {
-    meltDown();
-  }
+  //else if (hardLeftCount == 50) {
+  //  meltDown();
+  //}
   else if ((hardLeftCount - 1)%4 == 0) { //(hardLeftCount == 1)
     goWest();
   }
@@ -116,7 +116,7 @@ void loop() {
   else if ((hardLeftCount - 3)%4 == 0) { //(hardLeftCount == 3)
     goEast();
   }
-   else if ((hardLeftCount - 4)%4 == 0) { //(hardLeftCount == 4)
+  else if ((hardLeftCount - 4)%4 == 0) { //(hardLeftCount == 4)
     goNorth();
   }
 }
@@ -133,18 +133,18 @@ void goSouthForBlock() {
     case 0:  // air block and default case 
       // pick up blocks on hardLeftCount == 2, 6, 10, 14, 18, 22, ... when (HLC - 2)%4 ==0
       if (cmF > loadingLoc[blockCount]) {
-        parallelMove(110);
+        parallelMove(120);
       }
       else if (cmF < (loadingLoc[blockCount] - 3)) {
         pickUpBlock();
       }
       else {
-        parallelMove(80);
+        parallelMove(90);
       }
       break;
     case 1:  // south block
       if (cmF > 24.0) { //ideally 25.5
-        parallelMove(5);
+        parallelMove(120);
       }
       else if (cmF <= 24.0) {
         hardLeft(1);
@@ -152,7 +152,7 @@ void goSouthForBlock() {
       break;
     case 2: // eastern bloc
       if (cmF > 112) {
-        parallelMove(110);
+        parallelMove(120);
       }
       else if (cmF <= 112) {
         hardLeft(1);
@@ -168,13 +168,18 @@ void goEast() {
       break;
     case 1: // deliver south block
       if (cmF > southLocF[southColorLoc[currentBlockColor]]) {
-        parallelMove(80);
+        parallelMove(90);
       }
       else if (cmF <= southLocF[southColorLoc[currentBlockColor]]) {
         dropOffBlock();
-        while (cmF > 25.5) {  //southLocF[5]) {
-          parallelMove(70);
+        digitalWrite(frontSonarTrigger, HIGH);
+        while (cmF > 28){ //25.5) {  //southLocF[5]) { //BROKEN!!
+          parallelMove(80);
+          float pulse = pulseIn(4, HIGH);
+          cmF = pulse * 0.0173;
+          delay(20); //for the sonar....
         }
+        digitalWrite(frontSonarTrigger, LOW);
         hardLeft(1);
       }
       break;
@@ -193,7 +198,7 @@ void goNorth() {
   switch(blockSize) {
     case 1:
       if (cmF > (240-loadingLoc[blockCount])) {
-        parallelMove(110); // speed 5
+        parallelMove(120); // speed 5
       }
       else if (cmF <= (240-loadingLoc[blockCount])) {
         hardLeft(1);
@@ -201,13 +206,18 @@ void goNorth() {
       break;
     case 2:
       if (cmF > eastLocF[eastColorLoc[currentBlockColor]]) {
-        parallelMove(80); // speed 2
+        parallelMove(90); // speed 2
       }
       else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]]) {
         dropOffBlock();
-        while (cmF > 85) {
-          parallelMove(110);  //speed 5
+        while (cmF > 85) { //BROKEN!!
+          parallelMove(120);  //speed 5
+          digitalWrite(frontSonarTrigger, HIGH);
+          float pulse = pulseIn(4, HIGH);
+          cmF = pulse * 0.0173;
+          delay(40); //for the sonar....
         }
+        digitalWrite(frontSonarTrigger, LOW);
         hardLeft(1);
       }
       break;
@@ -215,6 +225,7 @@ void goNorth() {
 }
 
 void pickUpBlock() {
+  freeze();
   blockSize = testLoadingSize[blockCount];
   currentBlockColor = testLoadingColors[blockCount];
   if (blockSize == 0) { // air block
@@ -239,6 +250,7 @@ void pickUpBlock() {
 }
 
 void dropOffBlock() {
+  freeze();
   currentBlockColor = 0;
   delay(1000);
 }
@@ -256,19 +268,19 @@ void readEastColors() {
   }
   // north motion -- not getting zero sometimes
   if (cmF > eastLocF[0]+20 && northCount == 0){
-    parallelMove(110);
+    parallelMove(120);
   }
   else if (cmF > eastLocF[0] && northCount == 0 && millis() > timeRef + 1200) {
-    parallelMove(70);
+    parallelMove(90);
   }
   else if (cmF < eastLocF[0]-10 && cmR >disR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000)
-    topSpeed = 70;
+    topSpeed = 80;
     freeze();
     delay(600);
     northCount++;
   }
   else if (cmF < eastLocF[1]-10 && cmR >disR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000)
-    topSpeed = 70;
+    topSpeed = 80;
     freeze();
     delay(600);
     northCount++;
@@ -294,7 +306,7 @@ void readEastColors() {
     northCount++;
   }
   else{
-    parallelMove(70);
+    parallelMove(80);
     //QTIref = RCTime(11);
     //QTIref = (QTIref + RCTime(11))/2 ;
   }
@@ -302,32 +314,42 @@ void readEastColors() {
   Serial.println();  
  }
 
-void parallelMove(int SetTopSpeed) {
+void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inches or 16.5cm
   if (start > 2) {
     topSpeed = SetTopSpeed;
   }
+  int maxDistanceFromWall, minDistanceFromWall;
+  if (hardLeftCount == 0) {
+    maxDistanceFromWall = 14;
+    minDistanceFromWall = 11;
+  }
+  else {
+    maxDistanceFromWall = 14; //16.5;
+    minDistanceFromWall = 11; //14;
+  }
+    
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
-  if (distAveSideFront > 14 && distAveSideRear - distAveSideFront > 5 ){// 20 AND 7 originally
+  if (distAveSideFront > maxDistanceFromWall && distAveSideRear - distAveSideFront > 5 ){// 20 AND 7 originally
     straight(); //if already turned, don't turn more
     //delay(100);
     //straight();
   }
   // if 
-  else if (distAveSideFront < 11 && distAveSideFront - distAveSideRear > 5){ // 18 AND 7 originally
+  else if (distAveSideFront < minDistanceFromWall && distAveSideFront - distAveSideRear > 5){ // 18 AND 7 originally
     straight(); //if already turned, don't turn more
     //delay(100);
     //straight();
   }
-  else if (distAveSideFront > 14 ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
+  else if (distAveSideFront > maxDistanceFromWall ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
     right();
     //delay(100);
     //straight();
   }
   // if 
-  else if (distAveSideFront < 11 ){ //&& distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
+  else if (distAveSideFront < minDistanceFromWall ){ //&& distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
     left();
     //delay(100);
     //straight();
@@ -354,7 +376,7 @@ void hardLeft(int NWSE_0123) {
  int minF, maxF, minR, maxR;
  if (NWSE_0123 == 0){
    minF = 48;
-   maxF = 94;
+   maxF = 98;
    minR = 0;
    maxR = 0; 
  }
@@ -367,23 +389,24 @@ void hardLeft(int NWSE_0123) {
  SetSpeed(0, false, 0);
  SetSpeed(1, false, int(topSpeed)); //90 // 45);
  delay(100); //100
- SetSpeed(0, true, topSpeed*0.6);
+ SetSpeed(0, true, topSpeed*0.7);
  SetSpeed(1, false, topSpeed);
  delay(500);
  digitalWrite(frontSonarTrigger, HIGH);
  float pulse = pulseIn(4, HIGH);
- float cmF = pulse * 0.0173;
- if (NWSE_0123 == 0){
+ cmF = pulse * 0.0173;
+ hardLeftTurnCounter = 2;
+ if (NWSE_0123 == 100){
    while (cmF < minF || cmF > maxF) {// Sonar ping from the front sensor
      hardLeftTurnCounter = hardLeftTurnCounter + 1;
-     delay(10);
+     delay(40);
      pulse = pulseIn(4, HIGH);
      cmF = pulse * 0.0173; 
    }
  }
- else if (NWSE_0123 != 0) {
+ else if (NWSE_0123 >= 0) {
    for (int k = 0; k < hardLeftTurnCounter; k++){
-     delay(10);
+     delay(40);
      pulse = pulseIn(4, HIGH); // keep the timing symmetrical
      cmF = pulse * 0.0173;
    }
