@@ -46,6 +46,7 @@ int topSpeed = 120;                                // interface with the TReX Jr
 int northCount = 0;
 int hardLeftCount = 0;
 long QTIref = 1000;
+float pulse;
 float cmR = 1000;
 float cmF = 1000;
 int start = 0;
@@ -77,7 +78,7 @@ void loop() {
   pinMode(4, INPUT);
   //pinMode(5, INPUT);
   digitalWrite(frontSonarTrigger, HIGH); //turn on front sonar
-  float pulse = pulseIn(4, HIGH);
+  pulse = pulseIn(4, HIGH);
   //float pulse2 = pulseIn(5, HIGH);
   cmF = pulse * 0.0173;
   //float cmR = pulse2 * 0.0173;
@@ -128,6 +129,7 @@ void loop() {
 
 void goWest() {
   straight();
+  blockSize = 0;
   if (cmF < 24){
     hardLeft(1);
   }
@@ -138,7 +140,7 @@ void goSouthForBlock() {
     case 0:  // air block and default case 
       // pick up blocks on hardLeftCount == 2, 6, 10, 14, 18, 22, ... when (HLC - 2)%4 ==0
       if (cmF > loadingLoc[blockCount]) {
-        parallelMove(120);
+        parallelMove(100);
       }
       else if (cmF < (loadingLoc[blockCount] - 3)) {
         pickUpBlock();
@@ -149,7 +151,7 @@ void goSouthForBlock() {
       break;
     case 1:  // south block
       if (cmF > 24.0) { //ideally 25.5
-        parallelMove(120);
+        parallelMove(100);
       }
       else if (cmF <= 24.0) {
         hardLeft(1);
@@ -157,7 +159,7 @@ void goSouthForBlock() {
       break;
     case 2: // eastern bloc
       if (cmF > 112) {
-        parallelMove(120);
+        parallelMove(100);
       }
       else if (cmF <= 112) {
         hardLeft(1);
@@ -183,7 +185,7 @@ void goEast() {
         digitalWrite(frontSonarTrigger, HIGH);
         while (cmF > 25 || (millis() < timeRef + 500)){ //25.5)  //southLocF[5]) //BROKEN!!
           parallelMove(100);
-          float pulse = pulseIn(4, HIGH);
+          pulse = pulseIn(4, HIGH);
           cmF = pulse * 0.0173;
           delay(40); //for the sonar....
         }
@@ -204,15 +206,21 @@ void goEast() {
 
 void goNorth() {
   switch(blockSize) {
-    case 1: //delivered south block
-      if (cmF > (240-loadingLoc[blockCount]) || (millis() < timeRef + 2500)) {
+    case 1: { //delivered south block
+      digitalWrite(rearSonarTrigger, HIGH); //turn on front sonar
+      pulse = pulseIn(5, HIGH);
+      cmR = pulse * 0.0173;
+      if (cmR < (loadingLoc[blockCount]) || (millis() < timeRef + 3500)) {
         parallelMove(120); // speed 5
+        dPrint("made it to goNorth, cmR = ", cmR);
       }
-      else if (cmF <= (240-loadingLoc[blockCount])) {
+      else if (cmR >= (loadingLoc[blockCount])) {
         hardLeft(1);
+        digitalWrite(rearSonarTrigger, LOW);
       }
       break;
-    case 2: //delivering east block
+    }
+    case 2: { //delivering east block
       if (cmF > eastLocF[eastColorLoc[currentBlockColor]]) {
         parallelMove(90); // speed 2
       }
@@ -222,7 +230,7 @@ void goNorth() {
         while (cmF > 85) { //BROKEN!!
           parallelMove(120);  //speed 5
           digitalWrite(frontSonarTrigger, HIGH);
-          float pulse = pulseIn(4, HIGH);
+          pulse = pulseIn(4, HIGH);
           cmF = pulse * 0.0173;
           delay(40); //for the sonar....
         }
@@ -230,6 +238,7 @@ void goNorth() {
         hardLeft(1);
       }
       break;
+    }
   }
 }
 
@@ -407,7 +416,7 @@ void hardLeft(int NWSE_0123) {
  float sideFront = pingWall(3); 
  float sideRear = pingWall(2);
  /*digitalWrite(frontSonarTrigger, HIGH);
- float pulse = pulseIn(4, HIGH);
+ pulse = pulseIn(4, HIGH);
  cmF = pulse * 0.0173;
  
  prevCm = cmF; */
@@ -425,12 +434,7 @@ void hardLeft(int NWSE_0123) {
   /* while (cmF <= prevCm) {// Sonar ping from the front sensor
      prevCm = cmF;
      hardLeftTurnCounter = hardLeftTurnCounter + 1;
-       debugPrint("");
-       debugPrint("hardLeftCounter is ");
-       debugPrint(""+String(int(hardLeftTurnCounter)));
-       //Serial.println();
-       debugPrint(" ");
-       debugPrint(""+String(int(cmF)));
+       dPrint("hardLeftTurnCounter is ", hardLeftTurnCounter);
      delay(40);
      pulse = pulseIn(4, HIGH);
      cmF = pulse * 0.0173; 
@@ -441,9 +445,7 @@ void hardLeft(int NWSE_0123) {
      delay(40);
      sideFront = pingWall(3); 
      sideRear = pingWall(2);
-       debugPrint("");
-       debugPrint("hardLeftCounter is ");
-       debugPrint(""+String(int(hardLeftTurnCounter)));
+       dPrint("made it to ", hardLeftTurnCounter);
      /* delay(40);
      pulse = pulseIn(4, HIGH); // keep the timing symmetrical
      cmF = pulse * 0.0173; */
@@ -565,6 +567,12 @@ void meltDown() {
   Serial.print("the end");
   Serial.println();
   delay(20000);
+}
+void dPrint(String string, float z){
+  debugPrint("");
+  debugPrint(string);
+  debugPrint(""+String(int(z)));
+  debugPrintLn("");
 }
 
 void debugPrintLn(String string){
