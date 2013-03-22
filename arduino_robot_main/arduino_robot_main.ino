@@ -66,9 +66,12 @@ void loop() {
   digitalWrite(frontSonarTrigger, LOW);
   digitalWrite(rearSonarTrigger, LOW);
   if (start == 0) { //startup calibration for sonars
-    delay(1000);
+    delay(2000);
+    debugPrint("");
     start = 1;
   }
+  debugPrint("");
+  debugPrint("hardLeftCounter is ");
   // need to calibrate QTI beforehand to get black versus colors/white...
   //Serial.println(RCTime(11));
   pinMode(4, INPUT);
@@ -98,6 +101,8 @@ void loop() {
     if (millis() > timeRef + 500) {
       topSpeed = 120;
       start = 3;
+      debugPrint("");
+      debugPrint("HI ");
     }
   }
  //////START OF MAIN STATES/////
@@ -164,6 +169,8 @@ void goSouthForBlock() {
 void goEast() {
   switch(blockSize) {
     case 0:
+      freeze();
+      delay(10000);
       Serial.print("error in goEast");
       break;
     case 1: // deliver south block
@@ -172,12 +179,13 @@ void goEast() {
       }
       else if (cmF <= southLocF[southColorLoc[currentBlockColor]]) {
         dropOffBlock();
+        timeRef = millis();
         digitalWrite(frontSonarTrigger, HIGH);
-        while (cmF > 28){ //25.5) {  //southLocF[5]) { //BROKEN!!
-          parallelMove(80);
+        while (cmF > 25 || (millis() < timeRef + 500)){ //25.5)  //southLocF[5]) //BROKEN!!
+          parallelMove(100);
           float pulse = pulseIn(4, HIGH);
           cmF = pulse * 0.0173;
-          delay(20); //for the sonar....
+          delay(40); //for the sonar....
         }
         digitalWrite(frontSonarTrigger, LOW);
         hardLeft(1);
@@ -196,20 +204,21 @@ void goEast() {
 
 void goNorth() {
   switch(blockSize) {
-    case 1:
-      if (cmF > (240-loadingLoc[blockCount])) {
+    case 1: //delivered south block
+      if (cmF > (240-loadingLoc[blockCount]) || (millis() < timeRef + 2500)) {
         parallelMove(120); // speed 5
       }
       else if (cmF <= (240-loadingLoc[blockCount])) {
         hardLeft(1);
       }
       break;
-    case 2:
+    case 2: //delivering east block
       if (cmF > eastLocF[eastColorLoc[currentBlockColor]]) {
         parallelMove(90); // speed 2
       }
       else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]]) {
         dropOffBlock();
+        timeRef = millis();
         while (cmF > 85) { //BROKEN!!
           parallelMove(120);  //speed 5
           digitalWrite(frontSonarTrigger, HIGH);
@@ -286,23 +295,23 @@ void readEastColors() {
     northCount++;
   }
   else if (cmF < eastLocF[2]-10 && cmR >disR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref) { // < 8000)
-    freeze();
-    delay(600);
+    //freeze();
+    //delay(600);
     northCount++;
   }
   else if (cmF < eastLocF[3]-10 && cmR >disR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref) { // < 8000)
-    freeze();
-    delay(600);
+    //freeze();
+    //delay(600);
     northCount++;
   }
   else if (cmF < eastLocF[4]-10 && cmR >disR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref) { // < 8000)
-    freeze();
-    delay(600);
+    //freeze();
+    //delay(600);
     northCount++;
   }
   else if (cmF < eastLocF[5]-10 && cmR >disR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref) { // < 8000)
-    freeze();
-    delay(600);
+    //freeze();
+    //delay(600);
     northCount++;
   }
   else{
@@ -391,27 +400,56 @@ void hardLeft(int NWSE_0123) {
  delay(100); //100
  SetSpeed(0, true, topSpeed*0.7);
  SetSpeed(1, false, topSpeed);
- delay(500);
- digitalWrite(frontSonarTrigger, HIGH);
+ delay(450);
+ SetSpeed(0, true, 0);
+ SetSpeed(1, false, topSpeed);
+ 
+ float sideFront = pingWall(3); 
+ float sideRear = pingWall(2);
+ /*digitalWrite(frontSonarTrigger, HIGH);
  float pulse = pulseIn(4, HIGH);
  cmF = pulse * 0.0173;
- hardLeftTurnCounter = 2;
- if (NWSE_0123 == 100){
-   while (cmF < minF || cmF > maxF) {// Sonar ping from the front sensor
+ 
+ prevCm = cmF; */
+ if (NWSE_0123 == 0){
+   hardLeftTurnCounter = 0;
+   while (sideFront - sideRear < 0){
+     delay(40);
      hardLeftTurnCounter = hardLeftTurnCounter + 1;
+     sideFront = pingWall(3); 
+     sideRear = pingWall(2);
+       debugPrint("");
+       debugPrint("hardLeftCounter is ");
+       debugPrint(""+String(int(hardLeftTurnCounter)));
+ }
+  /* while (cmF <= prevCm) {// Sonar ping from the front sensor
+     prevCm = cmF;
+     hardLeftTurnCounter = hardLeftTurnCounter + 1;
+       debugPrint("");
+       debugPrint("hardLeftCounter is ");
+       debugPrint(""+String(int(hardLeftTurnCounter)));
+       //Serial.println();
+       debugPrint(" ");
+       debugPrint(""+String(int(cmF)));
      delay(40);
      pulse = pulseIn(4, HIGH);
      cmF = pulse * 0.0173; 
-   }
- }
- else if (NWSE_0123 >= 0) {
+   } */
+ } 
+ else if (NWSE_0123 > 0) {
    for (int k = 0; k < hardLeftTurnCounter; k++){
      delay(40);
+     sideFront = pingWall(3); 
+     sideRear = pingWall(2);
+       debugPrint("");
+       debugPrint("hardLeftCounter is ");
+       debugPrint(""+String(int(hardLeftTurnCounter)));
+     /* delay(40);
      pulse = pulseIn(4, HIGH); // keep the timing symmetrical
-     cmF = pulse * 0.0173;
+     cmF = pulse * 0.0173; */
    }
  }
- digitalWrite(frontSonarTrigger, LOW);
+ //digitalWrite(frontSonarTrigger, LOW);
  SetSpeed(0, true, 0);
  SetSpeed(1, false, 0);
  hardLeftCount++;
@@ -527,5 +565,14 @@ void meltDown() {
   Serial.print("the end");
   Serial.println();
   delay(20000);
-} 
+}
+
+void debugPrintLn(String string){
+  Serial.println(string);
+  Serial1.println(string);
+}
+void debugPrint(String c){
+  Serial.print(c);
+  Serial1.print(c);
+}
 
