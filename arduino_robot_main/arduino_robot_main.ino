@@ -235,7 +235,7 @@ void goNorth() {
           delay(40); //for the sonar....
         }
         digitalWrite(frontSonarTrigger, LOW);
-        hardLeft(1);
+        hardLeft(0);
       }
       break;
     }
@@ -342,8 +342,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 11;
   }
   else {
-    maxDistanceFromWall = 14; //16.5;
-    minDistanceFromWall = 11; //14;
+    maxDistanceFromWall = 20; //16.5;
+    minDistanceFromWall = 17.5; //14;
   }
     
   float distAveSideFront = pingWall(3); 
@@ -409,7 +409,7 @@ void hardLeft(int NWSE_0123) {
  delay(100); //100
  SetSpeed(0, true, topSpeed*0.7);
  SetSpeed(1, false, topSpeed);
- delay(450);
+ delay(500);
  SetSpeed(0, true, 0);
  SetSpeed(1, false, topSpeed);
  
