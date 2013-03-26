@@ -7,7 +7,7 @@ void setup(){
 void loop(){
   float sideFrontTotal = 0;
   float sideRearTotal = 0;
- for (int var = 1; var <= 3; ++var){                                // Loop to get average distance readings
+ for (int var = 1; var <= 1; ++var){                                // Loop to get average distance readings
       //float cmF2 = pingWall(4);
       // if (cmF2 > cmF){
       //    cmF = cmF2;
@@ -19,8 +19,10 @@ void loop(){
       sideRearTotal = (sideRearTotal + cmSR);       // distance readings are used to minimize 'hunting' and overcompensation while turning
     }
     float distAveFront = 30; // = (frontTotal/3);            // Distance from the wall in front of robot, determines a hard left turn
-    float distAveSideFront = (sideFrontTotal/3);    // Distance from the wall to the side of the robot, used for navigation 
-    float distAveSideRear = (sideRearTotal/3);
+    float distAveSideFront = (sideFrontTotal);    // Distance from the wall to the side of the robot, used for navigation 
+    float distAveSideRear = (sideRearTotal);
+    /////********removed loops for testing********
+    /////******loops are also too slow for realtime movement******
     Serial.print(distAveSideFront);
     Serial.print(" ");
     Serial.print(distAveSideRear);
