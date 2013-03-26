@@ -3,6 +3,7 @@ float prevCm = 1000;
 // includes Nick Pelone's debugPrint for bluetooth
 int frontSonarTrigger = 52;
 int rearSonarTrigger = 53;
+float cmF, cmR, pulse;
 
 void setup(){
  Serial.begin(9600);
@@ -15,8 +16,8 @@ void loop(){
  digitalWrite(frontSonarTrigger, LOW);
  digitalWrite(rearSonarTrigger, LOW);
  pinMode(4, INPUT);
- //pinMode(5, INPUT);
- float cmFArray[3];
+ pinMode(5, INPUT);
+ /*float cmFArray[3];
  digitalWrite(frontSonarTrigger, HIGH);
   for (int i = 0; i < 3; ++i){  // too slow!!!
     float pulse = pulseIn(4, HIGH);
@@ -41,14 +42,18 @@ debugPrint("");
    delay(100);
    pulse = pulseIn(4, HIGH);
    cmF = pulse * 0.0173;
- //Serial.print("rear is ");
- //Serial.print(cmR);
  }
  prevCm = cmF;
   debugPrint(" ");
  debugPrint(""+String(int(cmF)));
  debugPrintLn("");
- delay(300);
+ */
+ setCmR(); 
+ // *******minimum value is ~17cm, any closer reads 29cm or more*************
+ Serial.print("rear is ");
+ Serial.print(cmR);
+ Serial.println();
+ delay(100);
 }
 
 
@@ -72,3 +77,36 @@ void debugPrint(String c){
   Serial.print(c);
   Serial1.print(c);
 }
+
+void setCmF() {
+  digitalWrite(frontSonarTrigger, HIGH); //turn on front sonar
+  pulse = pulseIn(4, HIGH);
+  //float pulse2 = pulseIn(5, HIGH);
+  cmF = pulse * 0.0173;
+  //float cmR = pulse2 * 0.0173;
+  if (cmF < prevCm - 8 || cmF > prevCm) { //
+    delay(50);
+    pulse = pulseIn(4, HIGH);
+    cmF = pulse * 0.0173;
+    //Serial.print("correction is ");
+    //Serial.print(cmF);
+  }
+  digitalWrite(frontSonarTrigger, LOW); //turn off front sonar
+  //Serial.print("front is ");
+  //Serial.print(cmF);
+  prevCm = cmF;
+}
+
+void setCmR() {
+  digitalWrite(rearSonarTrigger, HIGH); //turn on rear sonar
+  pulse = pulseIn(5, HIGH);
+  cmR = pulse * 0.0173;
+  if (cmR < prevCm - 8 || cmR > prevCm) { //
+    delay(50);
+    pulse = pulseIn(5, HIGH);
+    cmR = pulse * 0.0173;
+  }
+  digitalWrite(rearSonarTrigger, LOW); //turn off rear sonar
+  prevCm = cmR;
+}
+
