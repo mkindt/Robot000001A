@@ -149,12 +149,12 @@ void goWest() {
   blockSize = 0;
   if (hardLeftCount < 2) { //34 inches for rear?
     setCmR();
-    if (cmR > 86) {
+    if (cmR > 70 && (millis() > timeRef + 700)) { //PUT IN TIMER OR SECONDARY CHECK
       hardLeft(0, 0);
     }
   }
   else {
-    if (cmF < 28){ //24
+    if (cmF < 28 && (millis() > timeRef + 700)) { //24
       hardLeft(0, 0);
     }
   }
@@ -165,14 +165,14 @@ void goSouthForBlock() {
     case 0:  // air block and default case 
       // pick up blocks on hardLeftCount == 2, 6, 10, 14, 18, 22, ... when (HLC - 2)%4 ==0
       setCmR();
-      if (cmR < loadingLocR[blockCount] || RCTime(11) > QTIref ) {
-        parallelMove(80);
+      if (cmR < (loadingLocR[blockCount] + 5) || RCTime(11) > QTIref ) {
+        parallelMove(60);
       }
-      else if (cmR > (loadingLocR[blockCount] + 3) && RCTime(11) < QTIref ) {
+      else if (cmR >= (loadingLocR[blockCount] + 5) && RCTime(11) < QTIref ) {
         pickUpBlock();
       }
       else {
-        parallelMove(70);
+        parallelMove(60);
       }
       break;
     case 1:  // south block
@@ -202,12 +202,12 @@ void goEast() {
       Serial.print("error in goEast");
       break;
     case 1: // deliver south block
-      if (cmF > southLocF[southColorLoc[currentBlockColor]]) {
-        parallelMove(90);
+      if (cmF > southLocF[southColorLoc[currentBlockColor]] - 7) {
+        parallelMove(60);
       }
-      else if (cmF <= southLocF[southColorLoc[currentBlockColor]]) {
+      else if (cmF <= southLocF[southColorLoc[currentBlockColor]] - 7) {
         dropOffBlock();
-        timeRef = millis();
+        timeRef = millis(); /// CREATE A UNIVERSAL TIMEREF COMING FROM HARDLEFT()
         digitalWrite(frontSonarTrigger, HIGH);
         while (cmF > 30 || (millis() < timeRef + 200)){ //25.5) //changed cmF > 28 for softening
           parallelMove(100);
@@ -236,11 +236,11 @@ void goNorth() {
       digitalWrite(rearSonarTrigger, HIGH); //turn on front sonar
       pulse = pulseIn(5, HIGH);
       cmR = pulse * 0.0173;
-      if (cmR < (loadingLoc[blockCount]) || (millis() < timeRef + 1200)) { //timeRef from hardLeft
+      if (cmR < (loadingLoc[blockCount] + 15) || (millis() < timeRef + 1200)) { //timeRef from hardLeft
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
       }
-      else if (cmR >= (loadingLoc[blockCount])) {
+      else if (cmR >= (loadingLoc[blockCount] + 15)) {
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
@@ -282,6 +282,7 @@ void pickUpBlock() {
   freeze();
     myservo1.attach(9);
     myservo2.attach(8);
+    myservo1.write(145);
     lowerarm();           // Lower the arm to the block 
     closesmallservo();      //  Close gripper
     delay(500);
@@ -513,7 +514,7 @@ void hardLeft(boolean calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(300); // turnTimer); //tests returned 319
+   delay(280); // turnTimer); //tests returned 319
  }
  SetSpeed(0, true, 0);
  SetSpeed(1, false, 0);
