@@ -3,66 +3,53 @@
 #include <Servo.h>
 #define TXPIN 12                                  // Define pins you're using for serial communication
 #define RXPIN 13                                  // Do not use pins 0 or 1 as they are reserved for
-    // 9 to 23                                              // standard I/O and programming 
-    // 8 to 24
-    //10 to 22    
+    // 9 to 23, 8 to 24, 10 to 22                 // standard I/O and programming 
 SoftwareSerial pololu(RXPIN, TXPIN);              // Create an instance of the software serial
 int frontSonarTrigger = 52;
 int rearSonarTrigger = 53;
-char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
 // north distances to front wall(inches): 50.25, 47.25, 44.25, 41.25, 38.25, 35.25
 // north distances to rear wall(inches): 43.75, 46.75, 49.75, 52.75, 55.75, 58.75
 // east distances to front wall(inches): 39, 36, 33, 30, 27, 24
 // east distances to rear wall(inches): 8.5, 11.5, 14.5, 17.5, 20.5, 23.5
-// south distances to front wall(inches): 
-// south distances to rear wall(inches):
 // 3 inches = 7.62cm
-// first six are traveling north, last six are traveling east
 //total north = 94.5 inches
 //length of robot: 22.2 cm
-
-//////////////// GRIPPER
-Servo myservo1;  // small servo
-             
+//////////////// GRIPPER ///////////////////////////////////
+Servo myservo1;  // small servo          
 Servo myservo2;   // large servo
-
  int inpin = 7;  // Press Sensor Pin
  int val = 0;    // Variable to store the read value
  int pos1 = 0;    // variable to store the small servo position
  int pos2 = 0;    // variable to store the big servo position
-
 int S0 = 8;//pinB  don't use this pin
 int S1 = 29;//pinA
 int S2 = 32;//pinE
 int S3 = 31;//pinF
 int out = 30;//pinC
 int LED = 27;//pinD
-//////////////////
+////////////////// END GRIPPER /////////
 float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.2, 77.5 };//adjusted for center of robot
 float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for center of robot
 float eastLocR[] = { 103.0, 110.0, 117.0, 124.0, 131.0, 138.0 };
 //float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
-float disR[] = { 103.0, 110.0, 117.0, 124.0, 131.0, 138.0 };
-// char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
 // int eastColorLoc[] = { 0, 0, 0, 0, 0, 0 };
 // int southColorLoc[] = { 0, 0, 0, 0, 0, 0 }; 
 // colors below will be measured and recorded in first passes unless we have access to competition boards
 // colorLoc indexes eastLocF and eastLocR: i.e. eastLocF[colorLoc[RED]]
-// testing order is green = 0th, orange = 1st, blue = 2nd, brown = 3rd, yellow = 4th, red = 5th
+// char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
 int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 };
 int southColorLoc[] = { 2, 3, 0, 4, 1, 5 };
-// block draw location : 0 = 728.65
 float loadingLoc[] = { 138.11, 130.5, 122.87, 115.25, 107.63, 100.01, 92.39, 84.77, 77.15, 69.53, 61.91, 54.29, 46.67, 39.05, 0, 0};
 float loadingLocR[] = { 23.1, 30.71, 38.32, 45.93, 53.54, 61.15, 68.76, 76.37 };
 int blockCount = 0; //tracks number of blocks picked up / delivered
 int blockSize = 0; // 0 for air/default, 1 for south, 2 for east
-int testLoadingColors[] = { 0, 2, 0, 2, 5, 1, 4, 3, 0, 2, 5, 1, 4, 3 }; // needed only for testing nav
-int testLoadingSize[] =   { 0, 1, 2, 0, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1 }; // needed only for testing nav
+// int testLoadingColors[] = { 0, 2, 0, 2, 5, 1, 4, 3, 0, 2, 5, 1, 4, 3 }; // needed only for testing nav
+// int testLoadingSize[] =   { 0, 1, 2, 0, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1 }; // needed only for testing nav
 int currentBlockColor = -1; // (0-5)
 unsigned long timeRef;
 unsigned long turnTimer;
-float prevCm = 1000;                               // communication object. This represents the
-int topSpeed = 120;                                // interface with the TReX Jr device
+float prevCm = 1000;
+int topSpeed = 120;
 int northCount = 0;
 int hardLeftCount = 0;
 long QTIref = 1000;
@@ -82,7 +69,6 @@ void setup() {                                     // Main application entry poi
   pinMode(frontSonarTrigger, OUTPUT); // off/on generate sonar
   pinMode(rearSonarTrigger, OUTPUT); // off/on generate sonar
   pinMode(inpin, INPUT); // Pin 7 is connected to press sensor ///GRIPPER///
-  // Press sensor attaches to pin 7 and to ground
   //myservo1.attach(9);  // attaches the small servo on pin 9
   //myservo2.attach(8);  // attaches the large servo on digital pin 8
   digitalWrite(inpin, HIGH);
@@ -104,8 +90,6 @@ void loop() {
     dPrint("test of dPrint ", cmF);
     start = 1;
   }
-  
-
   // need to calibrate QTI beforehand to get black versus colors/white...
   //Serial.println(RCTime(11));
   setCmF();
@@ -123,7 +107,7 @@ void loop() {
       debugPrint("HI ");
     }
   }
- //////START OF MAIN STATES/////
+ //////START OF MAIN STATES  ////////////////////////////////////////////////////////////////////////
   if (hardLeftCount == 0) {
     readEastColors();
   }
@@ -143,23 +127,23 @@ void loop() {
     goNorth();
   }
 }
-
+///////WEST  ////////////////////////////////////////////////////////////////////////
 void goWest() {
   straight();
   blockSize = 0;
   if (hardLeftCount < 2) { //34 inches for rear?
     setCmR();
-    if (cmR > 70 && (millis() > timeRef + 700)) { //PUT IN TIMER OR SECONDARY CHECK
+    if (cmR > 70 && (millis() > timeRef + 500)) { //PUT IN TIMER OR SECONDARY CHECK
       hardLeft(0, 0);
     }
   }
   else {
-    if (cmF < 28 && (millis() > timeRef + 700)) { //24
+    if (cmF < 28 && (millis() > timeRef + 500)) { //24
       hardLeft(0, 0);
     }
   }
 }
-
+///////SOUTH  ////////////////////////////////////////////////////////////////////////
 void goSouthForBlock() {
   switch(blockSize) {
     case 0:  // air block and default case 
@@ -169,6 +153,7 @@ void goSouthForBlock() {
         parallelMove(60);
       }
       else if (cmR >= (loadingLocR[blockCount] + 5) && RCTime(11) < QTIref ) {
+        fineTune(false, loadingLocR[blockCount] + 5);
         pickUpBlock();
       }
       else {
@@ -176,7 +161,7 @@ void goSouthForBlock() {
       }
       break;
     case 1:  // south block
-      if (cmF > 27) { //ideally 25.5
+      if (cmF > 27) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
         parallelMove(100);
       }
       else if (cmF <= 27) { //24
@@ -194,6 +179,44 @@ void goSouthForBlock() {
   }
 }
 
+/////FINETUNE   ////////////////////////////////////////////////////////////////////////
+void fineTune(boolean chooseSonar, float destination ) {
+  topSpeed = 60;
+  if (chooseSonar == true) {
+    setCmF();
+    float difference = cmF - destination;
+    while (abs(difference) > 0.5) {
+      if (difference > 0) { // if front is further from far wall than target
+        parallelMove(60);
+      }
+      else {
+        reverse();
+      }
+      delay(50);
+      setCmF();
+      difference = cmF - destination;
+    }
+  }
+  else { //rear sonar
+    setCmR();
+    float difference = cmR - destination;
+    while (abs(difference) > 0.5) {
+      if (difference > 0) { // if rear is further from far wall than target
+        reverse();
+      }
+      else {
+        parallelMove(60);
+      }
+      delay(50);
+      setCmR();
+      difference = cmR - destination;
+    }
+  }
+}
+  
+        
+  
+///////EAST  ////////////////////////////////////////////////////////////////////////
 void goEast() {
   switch(blockSize) {
     case 0:
@@ -207,7 +230,7 @@ void goEast() {
       }
       else if (cmF <= southLocF[southColorLoc[currentBlockColor]] - 7) {
         dropOffBlock();
-        timeRef = millis(); /// CREATE A UNIVERSAL TIMEREF COMING FROM HARDLEFT()
+        timeRef = millis();
         digitalWrite(frontSonarTrigger, HIGH);
         while (cmF > 30 || (millis() < timeRef + 200)){ //25.5) //changed cmF > 28 for softening
           parallelMove(100);
@@ -216,7 +239,7 @@ void goEast() {
           delay(40); //for the sonar....
         }
         digitalWrite(frontSonarTrigger, LOW);
-        hardLeft(1, 0);
+        hardLeft(0, 0);
       }
       break;
     case 2: //deliver east block
@@ -229,14 +252,14 @@ void goEast() {
       break;
   }
 }
-
+//////NORTH   ////////////////////////////////////////////////////////////////////////
 void goNorth() {
   switch(blockSize) {
     case 1: { //delivered south block
       digitalWrite(rearSonarTrigger, HIGH); //turn on front sonar
       pulse = pulseIn(5, HIGH);
       cmR = pulse * 0.0173;
-      if (cmR < (loadingLoc[blockCount] + 15) || (millis() < timeRef + 1200)) { //timeRef from hardLeft
+      if (cmR < (loadingLoc[blockCount] + 15) || (millis() < timeRef + 1000)) { //timeRef from hardLeft
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
       }
@@ -277,7 +300,7 @@ void goNorth() {
     }
   }
 }
-
+////PICKUP   ////////////////////////////////////////////////////////////////////////
 void pickUpBlock() {
   freeze();
     myservo1.attach(9);
@@ -313,7 +336,7 @@ void pickUpBlock() {
      myservo1.detach();
     myservo2.detach(); 
 }
-
+//////DROPOFF  ////////////////////////////////////////////////////////////////////////
 void dropOffBlock() {
   freeze();
     myservo1.attach(9);
@@ -328,7 +351,7 @@ void dropOffBlock() {
     myservo2.detach(); 
   // delay(1000);
 }
-
+////READEAST ////////////////////////////////////////////////////////////////////////
 void readEastColors() {
   if (cmF < 24){
     hardLeft(1, 0);
@@ -345,36 +368,36 @@ void readEastColors() {
     parallelMove(120);
   }
   else if (cmF > eastLocF[0] && northCount == 0 && millis() > timeRef + 1200) {
-    parallelMove(90);
+    parallelMove(120);
   }
-  else if (cmF < eastLocF[0]-10 && cmR >disR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000)
-    topSpeed = 80;
+  else if (cmF < eastLocF[0]-10 && cmR > eastLocR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000)
+    topSpeed = 70;
     freeze();
     delay(600);
     northCount++;
   }
-  else if (cmF < eastLocF[1]-10 && cmR >disR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000)
-    topSpeed = 80;
-    freeze();
-    delay(600);
-    northCount++;
-  }
-  else if (cmF < eastLocF[2]-10 && cmR >disR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[1]-10 && cmR > eastLocR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000)
+    //topSpeed = 80;
     //freeze();
     //delay(600);
     northCount++;
   }
-  else if (cmF < eastLocF[3]-10 && cmR >disR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[2]-10 && cmR > eastLocR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref) { // < 8000)
     //freeze();
     //delay(600);
     northCount++;
   }
-  else if (cmF < eastLocF[4]-10 && cmR >disR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[3]-10 && cmR > eastLocR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref) { // < 8000)
     //freeze();
     //delay(600);
     northCount++;
   }
-  else if (cmF < eastLocF[5]-10 && cmR >disR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[4]-10 && cmR > eastLocR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref) { // < 8000)
+    //freeze();
+    //delay(600);
+    northCount++;
+  }
+  else if (cmF < eastLocF[5]-10 && cmR > eastLocR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref) { // < 8000)
     freeze();
     delay(200);
     northCount++;
@@ -392,7 +415,7 @@ void readEastColors() {
   //Serial.print(northCount);
   Serial.println();  
  }
-
+////PARALLELMOVE  ////////////////////////////////////////////////////////////////////////
 void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inches or 16.5cm
   if (start > 2) {
     topSpeed = SetTopSpeed;
@@ -406,6 +429,10 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     maxDistanceFromWall = 21.0; //7.25 inches...
     minDistanceFromWall = 18.5;
   }
+  else if ((hardLeftCount - 4)%4 == 0 && blockSize == 1) { //returning north from delivering south block
+    maxDistanceFromWall = 25.0; //7.25 inches...
+    minDistanceFromWall = 22.0;
+  }
   else {
     maxDistanceFromWall = 20; //16.5;
     minDistanceFromWall = 17.5; //14;
@@ -414,33 +441,22 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     topSpeed = 110;
     maxDistanceFromWall = 23;
     minDistanceFromWall = 20;
-  }
-    
+  } 
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
   if (distAveSideFront > maxDistanceFromWall && distAveSideRear - distAveSideFront > 1 ){// 20 AND 7 originally
     straight(); //if already turned, don't turn more
-    //delay(100);
-    //straight();
   }
-  // if 
   else if (distAveSideFront < minDistanceFromWall && distAveSideFront - distAveSideRear > 1 ){ // 18 AND 7 originally
     straight(); //if already turned, don't turn more
-    //delay(100);
-    //straight();
   }
   else if (distAveSideFront > maxDistanceFromWall ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
     right();
-    //delay(100);
-    //straight();
   }
-  // if 
   else if (distAveSideFront < minDistanceFromWall ){ //&& distAveSideFront - distAveSideRear < 7){ // 18 AND 7 originally
     left();
-    //delay(100);
-    //straight();
   }
   else // if (distAveFront > 24) // smaller parallel adjustments
   {
@@ -458,7 +474,7 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     }
   }
 }
-
+/////HARDLEFT   ////////////////////////////////////////////////////////////////////////
 void hardLeft(boolean calibrate, boolean soften) {
   if (soften == true) {
     timeRef = millis();
@@ -467,19 +483,6 @@ void hardLeft(boolean calibrate, boolean soften) {
     }
   }
  topSpeed = 110;
- int minF, maxF, minR, maxR;
- if (calibrate == false){
-   minF = 48;
-   maxF = 98;
-   minR = 0;
-   maxR = 0; 
- }
- else if (calibrate == true) {
-   minF = 100; //24;
-   maxF = 160; //105;
-   minR = 0;
-   maxR = 0;
- }
  SetSpeed(0, false, 0);
  SetSpeed(1, false, int(topSpeed)); //90 // 45);
  delay(100); //100
@@ -518,6 +521,7 @@ void hardLeft(boolean calibrate, boolean soften) {
  }
  SetSpeed(0, true, 0);
  SetSpeed(1, false, 0);
+ timeRef = millis();
  hardLeftCount++;
 }
 
@@ -560,7 +564,7 @@ void reverse() {
   SetSpeed(1, true, topSpeed*0.7);
 }
 
-// ______QTI____________________
+// ______QTI____________  ///////////////////////////////////////////////////////
 long RCTime(int sensorIn) {
   long duration = 0;
   pinMode(sensorIn, OUTPUT); // Make pin OUTPUT
@@ -574,7 +578,7 @@ long RCTime(int sensorIn) {
   return duration;
 }
 
-// MOTORS_____________Set the motor index, direction, and speed
+// MOTORS_____________Set the motor index, direction, and speed  ////////////////////////////////////////////////////////////////////////
 // Motor index should either be a 0 or 1
 // Direction should be either true for forward or false for backwards
 // Speed should range between 0 and 127 (inclusivly)
@@ -601,7 +605,7 @@ void SetSpeed(int MotorIndex, boolean Forward, int Speed) {
   pololu.write(Speed);                            // pololu.print(Speed, BYTE);}
 }
 
-// SONAR FUNCTIONS::::::::::::::::::::::::::::::::::::  
+// SIDE SONAR FUNCTIONS::::::::::::::::::::::: ////////////////////////////////////////////////////////////////////////  
 float microsecondsToCentimeters(long microseconds) {       // converts duration of PING signal return to a distance value
   return microseconds / 29.387 / 2;
 }
@@ -636,6 +640,7 @@ void meltDown() {
   Serial.println();
   delay(20000);
 }
+//////BLUETOOTH   ///////////////////////////////////////////////////////
 void dPrint(String string, float z){
   debugPrint("");
   debugPrint(string);
@@ -651,7 +656,7 @@ void debugPrint(String c){
   Serial.print(c);
   Serial1.print(c);
 }
-
+/////SONAR  /////////////////////////////////////////////////////////////////////
 void setCmF() {
   digitalWrite(frontSonarTrigger, HIGH); //turn on front sonar
   pulse = pulseIn(4, HIGH);
@@ -683,74 +688,62 @@ void setCmR() {
   digitalWrite(rearSonarTrigger, LOW); //turn off rear sonar
   prevCm = cmR;
 }
-//////////// GRIPPER ///////////////////////
-
-void opensmallservo()
-{
+//////////// GRIPPER  ///////////////////////////////////////////////////////
+void opensmallservo() {
 //  Serial.print("Opening Gripper. Final Position: ");
 //  myservo2.write(pos2);
-   for(pos1 = 56; pos1 < 145; pos1++)  // small servo opens 
- {                                  // in steps of 1 degree
-  myservo1.write(pos1);              // tell servo to go to position in variable 'pos'
-   delay(15);                       // waits 15ms for the servo to reach the position
+  for(pos1 = 56; pos1 < 145; pos1++) {  // small servo opens in steps of 1 degree
+    myservo1.write(pos1);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
   }
 //   myservo2.write(pos2);
 //   delay(15);
 //  Serial.println(pos1);
 }
 
-void closesmallservo()
-{
+void closesmallservo() {
 //  Serial.print("Closing Gripper. ");
 //  Serial.println();
     // Pull Press Sensor input up
-   pos1 = 145;           // inititalize small servo position
-   while(pos1 > 56)
-   {                
-      myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
-      delay(15);                     // waits 15ms for the servo to reach the position
-      if (digitalRead(inpin)==LOW) {
+  pos1 = 145;           // inititalize small servo position
+  while(pos1 > 56) {                
+    myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
+    delay(15);                     // waits 15ms for the servo to reach the position
+    if (digitalRead(inpin)==LOW) {
      //  Serial.print("Final closed Position: ");  // Monitor the last position of the servo
      //  Serial.println(pos1);
-       break;
-      }
-      pos1--;
-   }
- //   Serial.print("Final Position: ");  // Monitor the last position of the servo
+      break;
+    }
+    pos1--;
+  }
+  //   Serial.print("Final Position: ");  // Monitor the last position of the servo
   Serial.println(pos1);       //  Add language to show size of block based on pos1 value
-if ((pos1>=104)&&(pos1<=125))
-{color();
-blockSize = 2;
-Serial.println("Rail block");}
-else if ((pos1>=85)&&(pos1<=100))
-{color();
-blockSize = 1;
-Serial.println("Sea block");}
-else if ((pos1>=57)&&(pos1<=80))
-{color();
-blockSize = 0;
-Serial.println("Air block");}
-else Serial.println("Shit");
-
+  if ((pos1>=104)&&(pos1<=125)) {
+    color();
+    blockSize = 2;
+    Serial.println("Rail block");
+  }
+  else if ((pos1>=85)&&(pos1<=100)) {
+    color();
+    blockSize = 1;
+    Serial.println("Sea block");
+  }
+  else if ((pos1>=57)&&(pos1<=80)) {
+    color();
+    blockSize = 0;
+    Serial.println("Air block");}
+  else Serial.println("Shit");
 }
 
-void liftarm()
-{
-//  Serial.print("Lifting Arm");
-//  Serial.println();
-   for(pos2 = 7; pos2 < 100; pos2 += 1)  // big servo lifts arm
-  {                                  // in steps of 1 degree
+void liftarm() {
+ for(pos2 = 7; pos2 < 100; pos2 += 1) { // big servo lifts arm in steps of 1 degree
     myservo2.write(pos2);              // tell big servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
 }
 
-void lowerarm()
-{
-//  Serial.print("Lowering Arm");
-//  Serial.println();
-  for(pos2 = 100; pos2>=7; pos2-=1)     // big servo lowers arm
-  {
+void lowerarm() {
+  for(pos2 = 100; pos2>=7; pos2-=1) {   // big servo lowers arm
     myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
@@ -763,6 +756,7 @@ void color() {
  // Serial.print("\n\n\n");
   delay(1000);
 }
+
 int detectColor(int taosOutPin){
   //isPresentTolerance will need to be something small if used in high light environment, large if used in dark environment.
   //the color detection will work either way, but the larger isPresentTolerance is, 
@@ -773,7 +767,7 @@ int detectColor(int taosOutPin){
   //Serial.println(isPresent,2);
   //Serial.print("isPresentTolerance currently set to:");
   //Serial.println(isPresentTolerance,2);
-  if(isPresent < isPresentTolerance){
+  if(isPresent < isPresentTolerance) {
     Serial.println("nothing is in front of sensor");
     return 0;
   }
@@ -782,8 +776,6 @@ int detectColor(int taosOutPin){
   red = white/colorRead(taosOutPin,1,1)*255;
   blue = white/colorRead(taosOutPin,2,1)*255;
   green = white/colorRead(taosOutPin,3,1)*255;
-
-  //Prints out RBG value right here.
 // Serial.print("red ");
 //  Serial.println(red);
 //  Serial.print("blue ");
@@ -791,36 +783,39 @@ int detectColor(int taosOutPin){
 //  Serial.print("green ");
 //  Serial.println(green);
 
-if(red > 175 && red < 205 && blue > 45 && blue < 62 && green > 30 && green < 45){
+if (red > 175 && red < 205 && blue > 45 && blue < 62 && green > 30 && green < 45) {
     Serial.println("Red Detected");
     return 0;
   }
 
- else if(red > 175 && red < 205 && blue > 38 && blue < 53 && green > 35 && green < 50){
+ else if (red > 175 && red < 205 && blue > 38 && blue < 53 && green > 35 && green < 50) {
     Serial.println("Orange Detected");
     return 1;
   }
 
- else if(red > 65 && red < 80 && blue > 80 && blue < 100 && green > 90 && green < 120){
+ else if (red > 65 && red < 80 && blue > 80 && blue < 100 && green > 90 && green < 120) {
     Serial.println("Green Detected");
     return 3;
   }
 
- else if(red > 118 && red < 145 && blue > 65 && blue < 83 && green > 59 && green < 75){
+ else if (red > 118 && red < 145 && blue > 65 && blue < 83 && green > 59 && green < 75) {
     Serial.println("Brown Detected");
     return 5;
   }
 
- else if(red > 20 && red < 45 && blue > 150 && blue < 170 && green > 70 && green < 90){
+ else if (red > 20 && red < 45 && blue > 150 && blue < 170 && green > 70 && green < 90) {
     Serial.println("Blue Detected");
     return 4;
   }
 
- else if(red > 115 && red < 138 && blue > 40 && blue < 60 && green > 80 && green < 100){
+ else if (red > 115 && red < 138 && blue > 40 && blue < 60 && green > 80 && green < 100) {
     Serial.println("Yellow Detected");
     return 2;
   }
-  else Serial.println(" :( I didn't read the fucking color :( ");
+  else {
+    freeze();
+    delay(30000); //TROUBLESHOOTING NUMBER
+  }
 }
 /*
 This method will return the pulseIn reading of the selected color.
@@ -831,44 +826,44 @@ This method will return the pulseIn reading of the selected color.
  if LEDstate is 0, LED will be off. 1 and the LED will be on.
  taosOutPin is the ouput of the TCS3200. If you have multiple TCS3200, all wires can be combined except the out pin
  */
-double colorRead(int taosOutPin, int color, boolean LEDstate){
+double colorRead(int taosOutPin, int color, boolean LEDstate) {
   //make sure that the pin is set to input
   pinMode(taosOutPin, INPUT);
   //turn on sensor with highest frequency settingtaosMode(1);
   //delay to let the sensor sit before taking a reading. Should be very small with this sensor
   int sensorDelay = 1;
   //set the pins to select the color  
-  if(color == 0){//white
+  if(color == 0) {//white
     digitalWrite(S3, LOW); //S3
     digitalWrite(S2, HIGH); //S2
     // Serial.print(" w");
   }
-  else if(color == 1){//red
+  else if(color == 1) {//red
     digitalWrite(S3, LOW); //S3
     digitalWrite(S2, LOW); //S2
     // Serial.print(" r");
   }
-  else if(color == 2){//blue
+  else if(color == 2) {//blue
     digitalWrite(S3, HIGH); //S3
     digitalWrite(S2, LOW); //S2 
     // Serial.print(" b");
   }
-  else if(color == 3){//green
+  else if(color == 3) {//green
     digitalWrite(S3, HIGH); //S3
     digitalWrite(S2, HIGH); //S2 
     // Serial.print(" g");
   }
   double readPulse;
-  if(LEDstate == 0){
+  if(LEDstate == 0) {
     digitalWrite(LED, LOW);
   }
-  if(LEDstate == 1){
+  if(LEDstate == 1) {
     digitalWrite(LED, HIGH);
   }
   delay(sensorDelay);
   readPulse = pulseIn(taosOutPin, LOW, 80000);
   //if the pulseIn times out, it returns 0 and that throws off numbers. just cap it at 80k if it happens
-  if(readPulse < .1){
+  if(readPulse < .1) {
     readPulse = 80000;
   }
   //turn off color sensor and white LED to save power 
@@ -876,7 +871,7 @@ double colorRead(int taosOutPin, int color, boolean LEDstate){
   return readPulse;
 }
 //setting mode to zero will put taos into low power mode. taosMode(0);
-void taosMode(int mode){
+void taosMode(int mode) {
   if(mode == 0){
     //power OFF
     digitalWrite(LED, LOW);
@@ -884,19 +879,19 @@ void taosMode(int mode){
     digitalWrite(S1, LOW); //S1
     //  Serial.println("mOFFm");
   }
-  else if(mode == 1){
+  else if(mode == 1) {
     //this will put in 1:1
     digitalWrite(S0, HIGH); //S0
     digitalWrite(S1, HIGH); //S1
     // Serial.println("m1:1m");
   }
-  else if(mode == 2){
+  else if(mode == 2) {
     //this will put in 1:5
     digitalWrite(S0, HIGH); //S0
     digitalWrite(S1, LOW); //S1
     //Serial.println("m1:5m");
   }
-  else if(mode == 3){
+  else if(mode == 3) {
     //this will put in 1:50
     digitalWrite(S0, LOW); //S0
     digitalWrite(S1, HIGH); //S1 
@@ -904,7 +899,7 @@ void taosMode(int mode){
   }
   return;
 }
-void TCS3200setup(){
+void TCS3200setup() {
   //initialize pins
   pinMode(LED,OUTPUT); //LED pinD
   //color mode selection
