@@ -72,12 +72,14 @@ void loop() {
   digitalWrite(frontSonarTrigger, LOW);
   digitalWrite(rearSonarTrigger, LOW);
   if (start == 0) { //startup calibration for sonars
-    delay(2000);
     debugPrint("");
+    debugPrint("test ");
+    delay(2000);
+    dPrint("test of dPrint ", cmF);
     start = 1;
   }
-  debugPrint("");
-  debugPrint("hardLeftCounter is ");
+  
+
   // need to calibrate QTI beforehand to get black versus colors/white...
   //Serial.println(RCTime(11));
   setCmF();
@@ -122,12 +124,12 @@ void goWest() {
   if (hardLeftCount == 0) { //34 inches for rear?
     setCmR();
     if (cmR > 86) {
-      hardLeft(1, 0);
+      hardLeft(0, 0);
     }
   }
   else {
     if (cmF < 28){ //24
-      hardLeft(1, 0);
+      hardLeft(0, 0);
     }
   }
 }
@@ -196,7 +198,7 @@ void goEast() {
         straight(); //parallelMove(110);
       }
       else if (cmF <= 28) {
-        hardLeft(1, 0);
+        hardLeft(0, 0);
       }
       break;
   }
@@ -283,13 +285,13 @@ void dropOffBlock() {
 
 void readEastColors() {
   if (cmF < 24){
-    hardLeft(0, 0);
+    hardLeft(1, 0);
   }
   if (cmF > 140){
     northCount = 0;
   }
   if (cmF < 92 && northCount > 5){  //originally <85
-    hardLeft(0, 0);
+    hardLeft(1, 0);
     northCount = 0;
   }
   // north motion -- not getting zero sometimes
@@ -443,10 +445,10 @@ void hardLeft(boolean calibrate, boolean soften) {
  
  float sideFront = pingWall(3); 
  float sideRear = pingWall(2);
- if (calibrate == false){ //recalibrate
+ if (calibrate == false) { //recalibrate
    hardLeftTurnCounter = 0;
    timeRef = millis();
-   while (sideFront - sideRear < 21){ //strange reading from this corner, previously < 0
+   while (sideFront - sideRear < 0){ //strange reading from this corner, previously < 0
      delay(40);
      //hardLeftTurnCounter = hardLeftTurnCounter + 1;
      //side calibration worked great until we increased height of side sonars, now rear value is small
@@ -457,6 +459,7 @@ void hardLeft(boolean calibrate, boolean soften) {
        debugPrint(""+String(int(hardLeftTurnCounter)));
    }
    turnTimer = millis() - timeRef;
+   dPrint("turnTimer = ", turnTimer);
  } 
  else if (calibrate == true) { //don't recalibrate //BACKWARDS boolean blah
    /*for (int k = 0; k < hardLeftTurnCounter; k++)
@@ -465,7 +468,7 @@ void hardLeft(boolean calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(turnTimer);
+   delay(310); // turnTimer); //tests returned 319
  }
  SetSpeed(0, true, 0);
  SetSpeed(1, false, 0);
