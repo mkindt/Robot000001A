@@ -13,6 +13,7 @@ void loop(){
       //    cmF = cmF2;
       // }   
       float cmSF = pingWall(3);                     // Sonar ping from the side front sensor
+      delay(40); // NEED THIS DELAY FOR PAIRED READINGS AT LONGER DISTANCES
       float cmSR = pingWall(2);                    // Sonar ping from the side rear sensor
       // frontTotal = (frontTotal + cmF);
       sideFrontTotal = (sideFrontTotal + cmSF);     // Adds the values in preparation for averaging, average value of 5
