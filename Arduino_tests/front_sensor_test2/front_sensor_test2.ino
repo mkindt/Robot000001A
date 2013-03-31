@@ -3,20 +3,24 @@ float prevCm = 1000;
 // includes Nick Pelone's debugPrint for bluetooth
 int frontSonarTrigger = 52;
 int rearSonarTrigger = 53;
-float cmF, cmR, pulse;
+int rearRightSonarTrigger = 49;
+float cmF, cmR, cmRR, pulse;
 
 void setup(){
  Serial.begin(9600);
  Serial1.begin(115200);
  pinMode(frontSonarTrigger, OUTPUT);
  pinMode(rearSonarTrigger, OUTPUT);
+ pinMode(rearRightSonarTrigger, OUTPUT);
 }
 
 void loop(){
  digitalWrite(frontSonarTrigger, LOW);
  digitalWrite(rearSonarTrigger, LOW);
+ digitalWrite(rearRightSonarTrigger, LOW);
  pinMode(4, INPUT);
  pinMode(5, INPUT);
+ pinMode(6, INPUT);
  /*float cmFArray[3];
  digitalWrite(frontSonarTrigger, HIGH);
   for (int i = 0; i < 3; ++i){  // too slow!!!
@@ -48,12 +52,24 @@ debugPrint("");
  debugPrint(""+String(int(cmF)));
  debugPrintLn("");
  */
+ /////// ~8 inch radius sight at 35 inches
+ /////// at distances around 22 inches sight expands slightly beyond 8 inches --
+ ///////// now object sometimes detected in the 8 inch radius,
+ /// slight balloon shape, see published diagrams
  setCmR(); 
  // *******minimum value is ~17cm, any closer reads 29cm or more*************
  Serial.print("rear is ");
  Serial.print(cmR);
+ //delay(100);
+  setCmF(); 
+  setCmRR();
+ // *******minimum value is ~17cm, any closer reads 29cm or more*************
+ Serial.print("    front is ");
+ Serial.print(cmF);
+ Serial.print(", rightRear is ");
+ Serial.print(cmRR);
  Serial.println();
- delay(100);
+ //delay(200);
 }
 
 
@@ -108,5 +124,18 @@ void setCmR() {
   }
   digitalWrite(rearSonarTrigger, LOW); //turn off rear sonar
   prevCm = cmR;
+}
+
+void setCmRR() {
+  digitalWrite(rearRightSonarTrigger, HIGH); //turn on rear sonar
+  pulse = pulseIn(6, HIGH);
+  cmRR = pulse * 0.0173;
+  if (cmRR < prevCm - 8 || cmRR > prevCm) { //
+    delay(50);
+    pulse = pulseIn(6, HIGH);
+    cmRR = pulse * 0.0173;
+  }
+  digitalWrite(rearRightSonarTrigger, LOW); //turn off rear sonar
+  prevCm = cmRR;
 }
 
