@@ -61,7 +61,9 @@ float cmF = 1000;
 float cmRR = 1000;
 int start = 0;
 int hardLeftTurnCounter = 0;
-
+int irPin1 = 50;	//Front IR pin
+int irPin2 = 51;	//Rear IR pin
+boolean irStatus = false;	//Are we in position via IR? true means stop
 
 void setup() {                                     // Main application entry point
   pinMode(RXPIN, INPUT);                          // Define the appropriate input/output pins
@@ -81,9 +83,17 @@ void setup() {                                     // Main application entry poi
   Serial.begin(9600);                             // Begin communicating with the pololu interface
   pololu.begin(19200);
   Serial1.begin(115200);
+
+  //IR setup
+  pinMode(irPin1, INPUT);
+  pinMode(irPin2, INPUT);
+  digitalWrite(irPin1, HIGH);
+  digitalWrite(irPin2, HIGH);
 }
 
 void loop() {
+
+//TODO: implement checkIRs() function during tests
   myservo1.detach();
   myservo2.detach();
   digitalWrite(frontSonarTrigger, LOW);
@@ -979,4 +989,48 @@ void TCS3200setup() {
   pinMode(S1,OUTPUT); //S1 pinA 
   return;
 }
+///////////////////////////IR sensors
 
+void checkIRs() {
+  //Checks the IRs at the pickup area to see if the bot is in place to pick up 
+  //a block
+    if ((digitalRead(irPin1) != 1) && (digitalRead(irPin2) != 1))   {
+    slightBackup();
+  }
+  else if (digitalRead(irPin1) != 1) {
+    slightForward();
+  }
+  else if (digitalRead(irPin2) != 1) {
+    slightBackup();
+  }else{
+  debugPrintLn("no move needed.");
+  irstatus = true;
+  delay(1000);
+}
+
+void slightBackup()  {
+ //backup robot slightly 
+ debugPrintLn("Backing up slightly");
+ while(irStatus == false){
+   //we are not in position
+   
+   //move forward super slow
+   setSpeed(0,false, int(60*0.96));
+   setSpeed(0,false,60)
+   //delay before check again
+   delay(1500);
+   checkIRS();
+  }
+}
+
+void slightForward()  {
+  //go forward slightly
+  debugPrintLn("Moving Forward slightly");
+    while(irStatus == false){
+      setSpeed(0,true, int(60*0.96));
+      setSpeed(1,true,60);
+      //delay before check again
+      delay(1500);
+      checkIRS();
+    }
+}
