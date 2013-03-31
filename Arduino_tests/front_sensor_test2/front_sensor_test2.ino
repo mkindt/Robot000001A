@@ -1,5 +1,7 @@
 
-float prevCm = 1000;
+float prevCmF = 1000;
+float prevCmR = 1000;
+float prevCmRR = 1000;
 // includes Nick Pelone's debugPrint for bluetooth
 int frontSonarTrigger = 52;
 int rearSonarTrigger = 53;
@@ -100,7 +102,7 @@ void setCmF() {
   //float pulse2 = pulseIn(5, HIGH);
   cmF = pulse * 0.0173;
   //float cmR = pulse2 * 0.0173;
-  if (cmF < prevCm - 8 || cmF > prevCm) { //
+  if (cmF < prevCmF - 8 || cmF > prevCmF) { //
     delay(50);
     pulse = pulseIn(4, HIGH);
     cmF = pulse * 0.0173;
@@ -110,32 +112,32 @@ void setCmF() {
   digitalWrite(frontSonarTrigger, LOW); //turn off front sonar
   //Serial.print("front is ");
   //Serial.print(cmF);
-  prevCm = cmF;
+  prevCmF = cmF;
 }
 
 void setCmR() {
   digitalWrite(rearSonarTrigger, HIGH); //turn on rear sonar
   pulse = pulseIn(5, HIGH);
   cmR = pulse * 0.0173;
-  if (cmR < prevCm - 8 || cmR > prevCm) { //
+  if (cmR < prevCmR - 8 || cmR > prevCmR) { //
     delay(50);
     pulse = pulseIn(5, HIGH);
     cmR = pulse * 0.0173;
   }
   digitalWrite(rearSonarTrigger, LOW); //turn off rear sonar
-  prevCm = cmR;
+  prevCmR = cmR;
 }
 
 void setCmRR() {
   digitalWrite(rearRightSonarTrigger, HIGH); //turn on rear sonar
   pulse = pulseIn(6, HIGH);
   cmRR = pulse * 0.0173;
-  if (cmRR < prevCm - 8 || cmRR > prevCm) { //
+  if (cmRR < prevCmRR - 8 || cmRR > prevCmRR) { //
     delay(50);
     pulse = pulseIn(6, HIGH);
     cmRR = pulse * 0.0173;
   }
   digitalWrite(rearRightSonarTrigger, LOW); //turn off rear sonar
-  prevCm = cmRR;
+  prevCmRR = cmRR;
 }
 
