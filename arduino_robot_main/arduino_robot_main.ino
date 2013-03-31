@@ -7,6 +7,7 @@
 SoftwareSerial pololu(RXPIN, TXPIN);              // Create an instance of the software serial
 int frontSonarTrigger = 52;
 int rearSonarTrigger = 53;
+int rearRightSonarTrigger = 49;
 // north distances to front wall(inches): 50.25, 47.25, 44.25, 41.25, 38.25, 35.25
 // north distances to rear wall(inches): 43.75, 46.75, 49.75, 52.75, 55.75, 58.75
 // east distances to front wall(inches): 39, 36, 33, 30, 27, 24
@@ -48,7 +49,9 @@ int blockSize = 0; // 0 for air/default, 1 for south, 2 for east
 int currentBlockColor = -1; // (0-5)
 unsigned long timeRef;
 unsigned long turnTimer;
-float prevCm = 1000;
+float prevCmF = 1000;
+float prevCmR = 1000;
+float prevCmRR = 1000;
 int topSpeed = 120;
 int northCount = 0;
 int hardLeftCount = 0;
@@ -56,6 +59,7 @@ long QTIref = 1000;
 float pulse;
 float cmR = 1000;
 float cmF = 1000;
+float cmRR = 1000;
 int start = 0;
 int hardLeftTurnCounter = 0;
 
@@ -66,8 +70,10 @@ void setup() {                                     // Main application entry poi
   TCS3200setup(); //color sensors
   pinMode(4, INPUT); // reading front sonar
   pinMode(5, INPUT); // reading rear sonar
+  pinMode(6, INPUT); // reading rear right sonar
   pinMode(frontSonarTrigger, OUTPUT); // off/on generate sonar
   pinMode(rearSonarTrigger, OUTPUT); // off/on generate sonar
+  pinMode(rearRightSonarTrigger, OUTPUT);
   pinMode(inpin, INPUT); // Pin 7 is connected to press sensor ///GRIPPER///
   //myservo1.attach(9);  // attaches the small servo on pin 9
   //myservo2.attach(8);  // attaches the large servo on digital pin 8
@@ -83,6 +89,7 @@ void loop() {
   myservo2.detach();
   digitalWrite(frontSonarTrigger, LOW);
   digitalWrite(rearSonarTrigger, LOW);
+  digitalWrite(rearRightSonarTrigger, LOW);
   if (start == 0) { //startup calibration for sonars
     debugPrint("");
     debugPrint("test ");
@@ -132,13 +139,15 @@ void goWest() {
   straight();
   blockSize = 0;
   if (hardLeftCount < 2) { //34 inches for rear?
-    setCmR();
-    if (cmR > 67 && (millis() > timeRef + 600)) { //69 //PUT IN TIMER OR SECONDARY CHECK
-      hardLeft(0, 0);
+    delay(30);
+    setCmRR();
+    if (cmRR > 67 && cmF < 35  && (millis() > timeRef + 400)) { //69 //PUT IN TIMER OR SECONDARY CHECK
+      hardLeft(1, 0); //CURRENTLY BLIND
     }
   }
   else {
-    if (cmF < 28 && (millis() > timeRef + 600)) { //24
+    setCmRR();
+    if (cmRR > 67 && cmF < 28 && (millis() > timeRef + 400)) { //24
       hardLeft(0, 0);
     }
   }
@@ -148,25 +157,34 @@ void goSouthForBlock() {
   switch(blockSize) {
     case 0:  // air block and default case 
       // pick up blocks on hardLeftCount == 2, 6, 10, 14, 18, 22, ... when (HLC - 2)%4 ==0
-      setCmR();
+      setCmRR();
       //if (cmR < (loadingLocR[blockCount] + 7) || RCTime(11) > QTIref ) 
       //  parallelMove(60);
       //}
-      if (cmR >= (loadingLocR[blockCount] + 7)) { // && RCTime(11) < QTIref )
-          if (cmF <= loadingLoc[blockCount] + 10 && cmF >= loadingLoc[blockCount] - 10) {
-            fineTune(false, loadingLocR[blockCount] + 7);
+      if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref ) { // +9 should be dead-on
+         parallelMove(70);
+         delay(800);
+          //if (cmF <= loadingLoc[blockCount] + 10 && cmF >= loadingLoc[blockCount] - 10) // won't work with sonar/blocks
+          /* int cmRArray[]= {0, 0, 0};
+          for (int k = 0; k < 3; k++) {
+            delay(20);
+            setCmR();
+            cmRArray[k] = int(cmR); 
+          }
+          if (medianer (cmRArray) >= (loadingLocR[blockCount] + 9)) */
+            fineTune(false, loadingLocR[blockCount] + 9);
             pickUpBlock();
           }
           else {
             parallelMove(60);
           }
-      }
-      else {
-        parallelMove(60);
-      }
+      //}
+      //else {
+      //  parallelMove(60);
+      //}
       break;
-    case 1:  // south block
-      if (cmF > 37) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
+    case 1:  // south block //improve the fluctuations
+      if (cmF > 37 ) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
         parallelMove(100);
       }
       else if (cmF > 27) {
@@ -178,10 +196,10 @@ void goSouthForBlock() {
       break;
     case 2: // eastern bloc
       setCmR();
-      if (cmR < 80) {         //TRYING REAR             // cmF > 112)
+      if (cmR < 82) {         //TRYING REAR             // cmF > 112)
         parallelMove(100);
       }
-      else if (cmR >= 80) { // cmF <= 112) 
+      else if (cmR >= 82) { // cmF <= 112) 
         hardLeft(1, true); //softening might not work as robot gets closer to south wall
       }
       break;
@@ -207,8 +225,8 @@ void fineTune(boolean chooseSonar, float destination ) {
     }
   }
   else { //rear sonar
-    setCmR();
-    float difference = cmR - destination;
+    setCmRR();
+    float difference = cmRR - destination;
     while (abs(difference) > 1.2) {
       if (difference > 0) { // if rear is further from far wall than target
         reverse();
@@ -217,8 +235,8 @@ void fineTune(boolean chooseSonar, float destination ) {
         parallelMove(60);
       }
       delay(40);
-      setCmR();
-      difference = cmR - destination;
+      setCmRR();
+      difference = cmRR - destination;
     }
   }
 }
@@ -249,7 +267,7 @@ void goEast() {
           delay(40); //for the sonar....
         }
         digitalWrite(frontSonarTrigger, LOW);
-        hardLeft(0, 0);
+        hardLeft(1, 0);
       }
       break;
     case 2: //deliver east block
@@ -266,14 +284,12 @@ void goEast() {
 void goNorth() {
   switch(blockSize) {
     case 1: { //delivered south block
-      digitalWrite(rearSonarTrigger, HIGH); //turn on front sonar
-      pulse = pulseIn(5, HIGH);
-      cmR = pulse * 0.0173;
-      if (cmR < (loadingLoc[blockCount] + 15) || (millis() < timeRef + 1000)) { //timeRef from hardLeft
+      setCmRR();
+      if (cmRR < (loadingLoc[blockCount] + 7) || (millis() < timeRef + 1000)) { //timeRef from hardLeft
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
       }
-      else if (cmR >= (loadingLoc[blockCount] + 15)) {
+      else if (cmRR >= (loadingLoc[blockCount] + 7)) {
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
@@ -283,7 +299,7 @@ void goNorth() {
       if (cmF > eastLocF[eastColorLoc[currentBlockColor]]) {
         parallelMove(90); // speed 2
       }
-      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]]) {
+      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && millis() < timeRef + 400) {
         if (eastColorLoc[currentBlockColor] != 5) {       
           dropOffBlock();
         }
@@ -418,7 +434,7 @@ void readEastColors() {
     delay(200);
     northCount++;
     timeRef = millis();
-    while (millis() - timeRef < 700) {
+    while (millis() - timeRef < 1300) {
       reverse();
     }
     freeze();
@@ -442,16 +458,16 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 11;
   }
   else if ((hardLeftCount - 2)%4 == 0) { // going south
-    maxDistanceFromWall = 21.7; //21 //7.25 inches...
-    minDistanceFromWall = 19.2; //18.5
+    maxDistanceFromWall = 21.0; //21 //7.25 inches...
+    minDistanceFromWall = 18.8; //18.5
   }
   else if ((hardLeftCount - 4)%4 == 0 && blockSize == 1) { //returning north from delivering south block
     maxDistanceFromWall = 25.0; //7.25 inches...
     minDistanceFromWall = 22.0;
   }
   else {
-    maxDistanceFromWall = 20.7; //20; //16.5;
-    minDistanceFromWall = 18.2; //17.5; //14;
+    maxDistanceFromWall = 20.3; //20; //16.5;
+    minDistanceFromWall = 17.5; //17.5; //14;
   }
   if (SetTopSpeed == 999) { // to soften a hardLeft turn
     topSpeed = 110;
@@ -491,14 +507,14 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
 }
 /////HARDLEFT   ////////////////////////////////////////////////////////////////////////
-void hardLeft(boolean calibrate, boolean soften) {
+void hardLeft(int calibrate, boolean soften) {
   if (soften == true) {
     timeRef = millis();
     while (millis() - timeRef < 400) {
     parallelMove(999);
     }
   }
- topSpeed = 110;
+ topSpeed = 90;
  SetSpeed(0, false, 0);
  SetSpeed(1, false, int(topSpeed)); //90 // 45);
  delay(100); //100
@@ -508,17 +524,17 @@ void hardLeft(boolean calibrate, boolean soften) {
  SetSpeed(0, true, 0);
  SetSpeed(1, false, topSpeed);
  
- float sideFront = pingWall(3); 
+ float sideFront = pingWall(3);
+   //delay(40); 
  float sideRear = pingWall(2);
- if (calibrate == false) { //recalibrate
+ if (calibrate == 0) { //recalibrate
    hardLeftTurnCounter = 0;
    timeRef = millis();
    while (sideFront - sideRear < 0){ //strange reading from this corner, previously < 0
      delay(40);
      //hardLeftTurnCounter = hardLeftTurnCounter + 1;
      //side calibration worked great until we increased height of side sonars, now rear value is small
-     sideFront = pingWall(3);
-    delay(30); 
+     sideFront = pingWall(3); 
      sideRear = pingWall(2);
        debugPrint("");
        debugPrint("hardLeftCounter is ");
@@ -527,7 +543,7 @@ void hardLeft(boolean calibrate, boolean soften) {
    turnTimer = millis() - timeRef;
    dPrint("turnTimer = ", turnTimer);
  } 
- else if (calibrate == true) { //don't recalibrate //BACKWARDS boolean blah
+ else if (calibrate == 1) { //don't recalibrate //BACKWARDS boolean blah
    /*if (hardLeftCount == 0) {
      timeRef = millis();
      while (millis() < timeRef - 300 */
@@ -537,8 +553,26 @@ void hardLeft(boolean calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(270); // turnTimer); //tests returned 319
+   delay(350); // turnTimer); //tests returned 319
  }
+ else if (calibrate == 2) {
+   hardLeftTurnCounter = 0;
+   timeRef = millis();
+   while (sideFront - sideRear < 0 && sideRear < 50) { //strange reading from this corner, previously < 0
+     delay(40);
+     //hardLeftTurnCounter = hardLeftTurnCounter + 1;
+     //side calibration worked great until we increased height of side sonars, now rear value is small
+     sideFront = pingWall(3);
+    delay(40); 
+     sideRear = pingWall(2);
+       debugPrint("");
+       debugPrint("hardLeftCounter is ");
+       debugPrint(""+String(int(hardLeftTurnCounter)));
+   }
+   turnTimer = millis() - timeRef;
+   dPrint("turnTimer = ", turnTimer);
+ }
+   
  SetSpeed(0, true, 0);
  SetSpeed(1, false, 0);
  timeRef = millis();
@@ -546,7 +580,7 @@ void hardLeft(boolean calibrate, boolean soften) {
 }
 
 void left() {
- SetSpeed(0, false, int(topSpeed*0.70)); //0.7 //74
+ SetSpeed(0, false, int(topSpeed*0.73)); //0.7 //74
  SetSpeed(1, false, topSpeed); //90
  //delay(100);
 }
@@ -557,7 +591,7 @@ void right() {
  //delay(100);
 }
 void fineLeft() {
- SetSpeed(0, false, int(topSpeed*0.88)); //0.87 //74
+ SetSpeed(0, false, int(topSpeed*0.89)); //0.87 //74
  SetSpeed(1, false, topSpeed); //90
  //delay(100);
 }
@@ -569,7 +603,7 @@ void fineRight() {
 }
 
 void straight() {
- SetSpeed(0, false, int(topSpeed*0.96)); //0.96 // 45); //left wheel moves faster
+ SetSpeed(0, false, int(topSpeed*0.98)); //0.96 // 45); //left wheel moves faster, 0.98 may be best
  SetSpeed(1, false, topSpeed); 
  //delay(100);
 }
@@ -641,11 +675,11 @@ float pingWall (int pingPin) {                             // Ping signal
   return microsecondsToCentimeters(pulseIn(pingPin, HIGH));
 }
 
-float medianer (float *x) {
+int medianer (int *x) {
   for (int i = 0; i<3-1; ++i) {  //size function?
     for (int j = i+1; j<3; ++j) {
       if (x[j] < x[i]) {
-        float temp = x[i];
+        int temp = x[i];
         x[i] = x[j];
         x[j] = temp;
       }
@@ -683,7 +717,7 @@ void setCmF() {
   //float pulse2 = pulseIn(5, HIGH);
   cmF = pulse * 0.0173;
   //float cmR = pulse2 * 0.0173;
-  if (cmF < prevCm - 8 || cmF > prevCm) { //
+  if (cmF < prevCmF - 8 || cmF > prevCmF) { //
     delay(50);
     pulse = pulseIn(4, HIGH);
     cmF = pulse * 0.0173;
@@ -693,26 +727,39 @@ void setCmF() {
   digitalWrite(frontSonarTrigger, LOW); //turn off front sonar
   //Serial.print("front is ");
   //Serial.print(cmF);
-  prevCm = cmF;
+  prevCmF = cmF;
 }
 
 void setCmR() {
   digitalWrite(rearSonarTrigger, HIGH); //turn on rear sonar
   pulse = pulseIn(5, HIGH);
   cmR = pulse * 0.0173;
-  if (cmR < prevCm - 8 || cmR > prevCm) { //
+  if (cmR < prevCmR - 8 || cmR > prevCmR) { //
     delay(50);
     pulse = pulseIn(5, HIGH);
     cmR = pulse * 0.0173;
   }
   digitalWrite(rearSonarTrigger, LOW); //turn off rear sonar
-  prevCm = cmR;
+  prevCmR = cmR;
+}
+
+void setCmRR() {
+  digitalWrite(rearSonarTrigger, HIGH); //turn on rear sonar
+  pulse = pulseIn(5, HIGH);
+  cmRR = pulse * 0.0173;
+  if (cmRR < prevCmRR - 8 || cmRR > prevCmRR) { //
+    delay(50);
+    pulse = pulseIn(5, HIGH);
+    cmRR = pulse * 0.0173;
+  }
+  digitalWrite(rearSonarTrigger, LOW); //turn off rear sonar
+  prevCmRR = cmRR;
 }
 //////////// GRIPPER  ///////////////////////////////////////////////////////
 void opensmallservo() {
 //  Serial.print("Opening Gripper. Final Position: ");
 //  myservo2.write(pos2);
-  for(pos1 = 56; pos1 < 145; pos1++) {  // small servo opens in steps of 1 degree
+  for(pos1; pos1 < 145; pos1++) {  // small servo opens in steps of 1 degree
     myservo1.write(pos1);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
@@ -752,7 +799,9 @@ void closesmallservo() {
     color();
     blockSize = 0;
     Serial.println("Air block");}
-  else Serial.println("Shit");
+  else {
+    freeze(); // do something here....
+  }
 }
 
 void liftarm() {
