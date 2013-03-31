@@ -1,4 +1,3 @@
-
 #include <SoftwareSerial.h>                       // Included for serial communication
 #include <Servo.h>
 #define TXPIN 12                                  // Define pins you're using for serial communication
