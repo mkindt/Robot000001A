@@ -42,6 +42,7 @@ int southColorLoc[] = { 2, 3, 0, 4, 1, 5 };
 float loadingLoc[] = { 138.11, 130.5, 122.87, 115.25, 107.63, 100.01, 92.39, 84.77, 77.15, 69.53, 61.91, 54.29, 46.67, 39.05, 0, 0};
 float loadingLocR[] = { 23.1, 30.71, 38.32, 45.93, 53.54, 61.15, 68.76, 76.37 };
 int blockCount = 0; //tracks number of blocks picked up / delivered
+int southBlockCount = 0;
 int blockSize = 0; // 0 for air/default, 1 for south, 2 for east
 // int testLoadingColors[] = { 0, 2, 0, 2, 5, 1, 4, 3, 0, 2, 5, 1, 4, 3 }; // needed only for testing nav
 // int testLoadingSize[] =   { 0, 1, 2, 0, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1 }; // needed only for testing nav
@@ -150,14 +151,20 @@ void goWest() {
   if (hardLeftCount < 2) { //34 inches for rear?
     delay(30);
     setCmRR();
-    if (cmRR > 67 && cmF < 35  && (millis() > timeRef + 400)) { //69 //PUT IN TIMER OR SECONDARY CHECK
+    if (cmRR > 69 && cmF < 35  && (millis() > timeRef + 400)) { //69 //PUT IN TIMER OR SECONDARY CHECK
+      freeze();
+      getPerpendicular();
+      fineTune(false, 71);
       hardLeft(1, 0); //CURRENTLY BLIND
     }
   }
   else {
     setCmRR();
-    if (cmRR > 67 && cmF < 28 && (millis() > timeRef + 400)) { //24
-      hardLeft(0, 0);
+    if (cmRR > 69 && cmF < 33 && (millis() > timeRef + 200)) { //24
+      freeze();
+      getPerpendicular();
+      fineTune(true, 26);
+      hardLeft(1, 0);
     }
   }
 }
@@ -170,9 +177,9 @@ void goSouthForBlock() {
       //if (cmR < (loadingLocR[blockCount] + 7) || RCTime(11) > QTIref ) 
       //  parallelMove(60);
       //}
-      if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref ) { // +9 should be dead-on
+      if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref && millis() > timeRef + 300) { // +9 should be dead-on
          parallelMove(70);
-         delay(800);
+         delay(100);
           //if (cmF <= loadingLoc[blockCount] + 10 && cmF >= loadingLoc[blockCount] - 10) // won't work with sonar/blocks
           /* int cmRArray[]= {0, 0, 0};
           for (int k = 0; k < 3; k++) {
@@ -181,7 +188,8 @@ void goSouthForBlock() {
             cmRArray[k] = int(cmR); 
           }
           if (medianer (cmRArray) >= (loadingLocR[blockCount] + 9)) */
-            fineTune(false, loadingLocR[blockCount] + 9);
+            getPerpendicular();
+            fineTune(false, loadingLocR[blockCount] + 9.5);
             pickUpBlock();
           }
           else {
@@ -193,15 +201,32 @@ void goSouthForBlock() {
       //}
       break;
     case 1:  // south block //improve the fluctuations
-      if (cmF > 37 ) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
-        parallelMove(100);
+      if (southBlockCount == 0) { 
+        if (cmF > 37 ) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
+          parallelMove(100);
+        }
+        else if (cmF > 27) {
+          parallelMove(70);
+        }
+        else if (cmF <= 24) { //27 //24  // FRONT SONAR WILL FAIL WITH BLOCK ALREADY TO SOUTH 
+          hardLeft(1, 0);
+        }
       }
-      else if (cmF > 27) {
-        parallelMove(70);
-      }
-      else if (cmF <= 27) { //27 //24  // FRONT SONAR WILL FAIL WITH BLOCK ALREADY TO SOUTH 
-        hardLeft(1, 0);
-      }
+      else {
+        setCmR();
+        if (cmF <= 25 && cmR > 100) {
+          hardLeft(1, 0);
+        }
+        else if (cmR < 80) {
+          parallelMove(100);
+        }
+        else if (cmR < 100) {
+          parallelMove(70);
+        }
+        else {
+          parallelMove(100);
+        }         
+      }   
       break;
     case 2: // eastern bloc
       setCmR();
@@ -213,6 +238,23 @@ void goSouthForBlock() {
       }
       break;
   }
+}
+void getPerpendicular() {
+  float distAveSideFront = pingWall(3); 
+  float distAveSideRear = pingWall(2);
+  float difference = distAveSideFront - distAveSideRear;
+  while (abs(difference) > 0.8) {
+    if (distAveSideFront > distAveSideRear) {
+        swivelR();
+    }
+    else {
+      swivelL();
+    }
+  distAveSideFront = pingWall(3); 
+  distAveSideRear = pingWall(2);
+  difference = distAveSideFront - distAveSideRear;
+  }
+  freeze();
 }
 
 /////FINETUNE   ////////////////////////////////////////////////////////////////////////
@@ -262,10 +304,15 @@ void goEast() {
       break;
     case 1: // deliver south block  // NEED TO RECALIBRATE TURN T0 GET THIS BETTER, BATTERY AFFECTING....
       if (cmF > southLocF[southColorLoc[currentBlockColor]] - 7 || millis() < timeRef + 200) {
-        parallelMove(60);
+        parallelMove(70);
       }
       else if (cmF <= southLocF[southColorLoc[currentBlockColor]] - 7) {
-        fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 7);
+        parallelMove(60);
+        delay(300);
+        getPerpendicular();
+        fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); //4
+        getPerpendicular();
+        fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); 
         dropOffBlock();
         timeRef = millis();
         digitalWrite(frontSonarTrigger, HIGH);
@@ -277,10 +324,11 @@ void goEast() {
         }
         digitalWrite(frontSonarTrigger, LOW);
         hardLeft(1, 0);
+        southBlockCount++;
       }
       break;
     case 2: //deliver east block
-      if (cmF > 28) {
+      if (cmF > 28 && millis() < timeRef + 300) {
         straight(); //parallelMove(110);
       }
       else if (cmF <= 28) {
@@ -294,11 +342,13 @@ void goNorth() {
   switch(blockSize) {
     case 1: { //delivered south block
       setCmRR();
-      if (cmRR < (loadingLoc[blockCount] + 7) || (millis() < timeRef + 1000)) { //timeRef from hardLeft
+      if (cmRR < (loadingLoc[blockCount] + 1) || (millis() < timeRef + 500)) { //timeRef from hardLeft
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
       }
-      else if (cmRR >= (loadingLoc[blockCount] + 7)) {
+      else if (cmRR >= (loadingLoc[blockCount] + 1 && cmF < loadingLocR[blockCount] + 27)) {
+        freeze();
+        getPerpendicular();
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
@@ -344,6 +394,10 @@ void pickUpBlock() {
     lowerarm();           // Lower the arm to the block 
     closesmallservo();      //  Close gripper
     delay(500);
+    if (blockSize == 999) {
+      opensmallservo();
+      closesmallservo();
+    }
   // blockSize = testLoadingSize[blockCount];
   // currentBlockColor = testLoadingColors[blockCount];
   if (blockSize == 0) { // air block
@@ -474,9 +528,9 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     maxDistanceFromWall = 25.0; //7.25 inches...
     minDistanceFromWall = 22.0;
   }
-  else {
-    maxDistanceFromWall = 20.3; //20; //16.5;
-    minDistanceFromWall = 17.5; //17.5; //14;
+  else { // SOUTH WALL
+    maxDistanceFromWall = 20.7; //20; //16.5; //FINAL 20.3 almost perfect
+    minDistanceFromWall = 17.9; //17.5; //14; //FINAL 17.5 almost perfect
   }
   if (SetTopSpeed == 999) { // to soften a hardLeft turn
     topSpeed = 110;
@@ -586,6 +640,12 @@ void hardLeft(int calibrate, boolean soften) {
  SetSpeed(1, false, 0);
  timeRef = millis();
  hardLeftCount++;
+ if ((hardLeftCount - 3)%4 == 0 && blockSize == 1) {  //going east with a south block
+   getPerpendicular();
+ }
+ if ((hardLeftCount - 2)%4 == 0 && blockCount >= 1) {
+   getPerpendicular();
+ }
 }
 
 void left() {
@@ -615,6 +675,16 @@ void straight() {
  SetSpeed(0, false, int(topSpeed*0.98)); //0.96 // 45); //left wheel moves faster, 0.98 may be best
  SetSpeed(1, false, topSpeed); 
  //delay(100);
+}
+
+void swivelL() {
+  SetSpeed(0, false, 0); // 45);
+  SetSpeed(1, false, 60); //0.90 //37);
+}
+
+void swivelR() {
+  SetSpeed(0, false, 60); // 45);
+  SetSpeed(1, false, 0); //0.90 //37);
 }
 
 void freeze() {
@@ -809,6 +879,7 @@ void closesmallservo() {
     blockSize = 0;
     Serial.println("Air block");}
   else {
+    blockSize = 999;
     freeze(); // do something here....
   }
 }

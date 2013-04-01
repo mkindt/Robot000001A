@@ -182,12 +182,12 @@ int orientationDataReady(struct orientationInfo *o) {
 }
 
 void printOrientation(struct orientationInfo *o) {
-  Serial.print("{\"accel\":{\"x\":") ;
+  /*Serial.print("{\"accel\":{\"x\":") ;
   Serial.print(o->accel.x) ;
   Serial.print(",\"y\":") ;
   Serial.print(o->accel.y) ; 
   Serial.print(",\"z\":") ;
-  Serial.print(o->accel.z) ; 
+  Serial.print(o->accel.z) ; */
   Serial.print("},\"mag\":{\"x\":") ;
   Serial.print(o->mag.x) ;
   Serial.print(",\"y\":") ;
@@ -195,17 +195,24 @@ void printOrientation(struct orientationInfo *o) {
   Serial.print(",\"z\":") ;
   Serial.print(o->mag.z) ;
   Serial.println("}}") ;
-  heading = atan2(o->mag.y , o->mag.x);
+  float mainX = o->mag.x + 231; //offsets calculated from observed range x: -1323, 861
+  float mainY = o->mag.y - 905.5; // (max + min)/2 ..... y: 124, 1687
+  heading = atan2(mainY, mainX);
+  //heading = atan2(o->mag.y , o->mag.x);
    //if(heading < 0){
    // heading += 2*PI;
    //}
    angle = heading * 180/M_PI;
+   Serial.print(angle) ;
+   Serial.print(" is angle? ") ;
    if (o->mag.y > 0) {
      angle = 90 - angle;
    }
    else if (o->mag.y < 0) {
         angle = 270 - angle;
    }
+   Serial.print(heading) ;
+   Serial.print(" is the heading, angle is ") ;
    Serial.print(angle) ;
   Serial.println("}}") ;
   o->responders = 0 ;
