@@ -151,10 +151,10 @@ void goWest() {
   }
   else {
     setCmRR();
-    if (cmRR > 69 && cmF < 35 && (millis() > timeRef + 200)) { //24
+    if (cmRR > 69 && cmF < 33 && (millis() > timeRef + 200)) { //24
       freeze();
       getPerpendicular();
-      fineTune(true, 30);
+      fineTune(true, 26);
       hardLeft(1, 0);
     }
   }
@@ -180,7 +180,7 @@ void goSouthForBlock() {
           }
           if (medianer (cmRArray) >= (loadingLocR[blockCount] + 9)) */
             getPerpendicular();
-            fineTune(false, loadingLocR[blockCount] + 9);
+            fineTune(false, loadingLocR[blockCount] + 9.5);
             pickUpBlock();
           }
           else {
@@ -205,7 +205,7 @@ void goSouthForBlock() {
       }
       else {
         setCmR();
-        if (cmF <= 25 && cmR > 125) {
+        if (cmF <= 25 && cmR > 100) {
           hardLeft(1, 0);
         }
         else if (cmR < 80) {
@@ -333,11 +333,11 @@ void goNorth() {
   switch(blockSize) {
     case 1: { //delivered south block
       setCmRR();
-      if (cmRR < (loadingLoc[blockCount] - 2) || (millis() < timeRef + 500)) { //timeRef from hardLeft
+      if (cmRR < (loadingLoc[blockCount] + 1) || (millis() < timeRef + 500)) { //timeRef from hardLeft
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
       }
-      else if (cmRR >= (loadingLoc[blockCount] - 2 && cmF < loadingLocR[blockCount] + 20)) {
+      else if (cmRR >= (loadingLoc[blockCount] + 1 && cmF < loadingLocR[blockCount] + 27)) {
         freeze();
         getPerpendicular();
         hardLeft(1, 0); //dont soften turn
@@ -520,8 +520,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 22.0;
   }
   else { // SOUTH WALL
-    maxDistanceFromWall = 20.4; //20; //16.5; //FINAL 20.3 almost perfect
-    minDistanceFromWall = 17.6; //17.5; //14; //FINAL 17.5 almost perfect
+    maxDistanceFromWall = 20.7; //20; //16.5; //FINAL 20.3 almost perfect
+    minDistanceFromWall = 17.9; //17.5; //14; //FINAL 17.5 almost perfect
   }
   if (SetTopSpeed == 999) { // to soften a hardLeft turn
     topSpeed = 110;
