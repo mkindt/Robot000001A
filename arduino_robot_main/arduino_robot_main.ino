@@ -326,11 +326,13 @@ void goEast() {
       }
       break;
     case 2: //deliver east block
-      if (cmF > 28 && millis() < timeRef + 300) {
+      if (cmF > 26 && millis() < timeRef + 300) {
         straight(); //parallelMove(110);
       }
-      else if (cmF <= 28) {
-        hardLeft(0, 0);
+      else if (cmF <= 26) {
+        getPerpendicular();
+        fineTune(true, 28);
+        hardLeft(1, 0);
       }
       break;
   }
@@ -358,7 +360,7 @@ void goNorth() {
       if (cmF > eastLocF[eastColorLoc[currentBlockColor]] && cmRR < 109) {
         parallelMove(90); // speed 2
       }
-      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && millis() > timeRef + 100) {
+      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && cmRR > 109 && millis() > timeRef + 100) {
           parallelMove(60);
           delay(300);
           getPerpendicular();
@@ -918,13 +920,13 @@ int detectColor(int taosOutPin){
   red = white/colorRead(taosOutPin,1,1)*255;
   blue = white/colorRead(taosOutPin,2,1)*255;
   green = white/colorRead(taosOutPin,3,1)*255;
-// Serial.print("red ");
+  dPrint("red is ", red);
 //  Serial.println(red);
-//  Serial.print("blue ");
+dPrint("blue is ", blue);
 //  Serial.println(blue);
-//  Serial.print("green ");
+dPrint("green is ", green);
 //  Serial.println(green);
-
+// blue: R36 B159 G81
 if (red > 175 && red < 205 && blue > 45 && blue < 62 && green > 30 && green < 45) {
     Serial.println("Red Detected");
     return 0;
