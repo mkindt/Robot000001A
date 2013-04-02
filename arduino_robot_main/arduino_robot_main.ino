@@ -151,8 +151,9 @@ void goWest() {
   if (hardLeftCount < 200) { //34 inches for rear? //used to be <2
     delay(30);
     setCmRR();
-    if (cmRR > 69 && cmF < 35  && (millis() > timeRef + 400)) { //69 //PUT IN TIMER OR SECONDARY CHECK
+    if (cmRR > 69 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
       freeze();
+      dPrint("front in the turn is ", cmF);
       getPerpendicular();
       fineTune(false, 71.7); //71 seemed perfect
       hardLeft(1, 0); //CURRENTLY BLIND
@@ -522,8 +523,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 22.0; //18.5
   }
   else if ((hardLeftCount - 2)%4 == 0) { // going south
-    maxDistanceFromWall = 10;//19.7; //21 //7.25 inches...  //perfect so far was 21.0
-    minDistanceFromWall = 7; //17.5; //18.5 //perfect so far was 18.8
+    maxDistanceFromWall = 20.7; //21 //7.25 inches...  //perfect so far was 21.0
+    minDistanceFromWall = 18.1; //17.5; //18.5 //perfect so far was 18.8
   }
   else if ((hardLeftCount - 4)%4 == 0 && blockSize == 1) { //returning north from delivering south block
     maxDistanceFromWall = 25.0; //7.25 inches... // was 26.0 for a long time
@@ -617,7 +618,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(355); // turnTimer); //tests returned 319 // 350 has been working perfectly
+   delay(360); // turnTimer); //tests returned 319 // 350 has been working perfectly
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
@@ -856,7 +857,7 @@ void closesmallservo() {
   while(pos1 > 56) {                
     myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
     delay(15);                     // waits 15ms for the servo to reach the position
-    if (digitalRead(inpin)==LOW && pos1<=124) { //added pos1<=125 to prevent premature stop by sensor on long blocks
+    if (digitalRead(inpin)==LOW && pos1<=121) { //added pos1<=125 to prevent premature stop by sensor on long blocks
      //  Serial.print("Final closed Position: ");  // Monitor the last position of the servo
      //  Serial.println(pos1);
       break;
