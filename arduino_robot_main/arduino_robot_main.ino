@@ -29,7 +29,7 @@ int S3 = 31;//pinF
 int out = 30;//pinC
 int LED = 27;//pinD
 ////////////////// END GRIPPER /////////
-float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.2, 77.5 };//adjusted for center of robot
+float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.1, 77.5 };//adjusted for center of robot
 float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for center of robot
 float eastLocR[] = { 103.0, 110.0, 117.0, 124.0, 131.0, 138.0 };
 //float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
@@ -139,13 +139,13 @@ void loop() {
 void goWest() {
   straight();
   blockSize = 0;
-  if (hardLeftCount < 2) { //34 inches for rear?
+  if (hardLeftCount < 200) { //34 inches for rear? //used to be <2
     delay(30);
     setCmRR();
     if (cmRR > 69 && cmF < 35  && (millis() > timeRef + 400)) { //69 //PUT IN TIMER OR SECONDARY CHECK
       freeze();
       getPerpendicular();
-      fineTune(false, 71);
+      fineTune(false, 71.7); //71 seemed perfect
       hardLeft(1, 0); //CURRENTLY BLIND
     }
   }
@@ -154,7 +154,7 @@ void goWest() {
     if (cmRR > 69 && cmF < 33 && (millis() > timeRef + 200)) { //24
       freeze();
       getPerpendicular();
-      fineTune(true, 26);
+      fineTune(true, 25.3); //26 was great
       hardLeft(1, 0);
     }
   }
@@ -170,7 +170,7 @@ void goSouthForBlock() {
       //}
       if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref && millis() > timeRef + 300) { // +9 should be dead-on
          parallelMove(70);
-         delay(100);
+         delay(200);
           //if (cmF <= loadingLoc[blockCount] + 10 && cmF >= loadingLoc[blockCount] - 10) // won't work with sonar/blocks
           /* int cmRArray[]= {0, 0, 0};
           for (int k = 0; k < 3; k++) {
@@ -180,7 +180,9 @@ void goSouthForBlock() {
           }
           if (medianer (cmRArray) >= (loadingLocR[blockCount] + 9)) */
             getPerpendicular();
-            fineTune(false, loadingLocR[blockCount] + 9.5);
+            fineTune(false, loadingLocR[blockCount] + 9.8); //9.5 was almost perfect
+            getPerpendicular();
+            fineTune(false, loadingLocR[blockCount] + 9.8);
             pickUpBlock();
           }
           else {
@@ -205,7 +207,10 @@ void goSouthForBlock() {
       }
       else {
         setCmR();
-        if (cmF <= 25 && cmR > 100) {
+        if (cmF <= 30 && cmR > 100) { // when front is 23.5,  rear (not RR) is 137, but only away from blocks
+          freeze();
+          getPerpendicular();
+          fineTune(false, 137);
           hardLeft(1, 0);
         }
         else if (cmR < 80) {
@@ -215,7 +220,7 @@ void goSouthForBlock() {
           parallelMove(70);
         }
         else {
-          parallelMove(100);
+          parallelMove(70);
         }         
       }   
       break;
@@ -234,7 +239,7 @@ void getPerpendicular() {
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
   float difference = distAveSideFront - distAveSideRear;
-  while (abs(difference) > 0.8) {
+  while (abs(difference) > 0.6) { //working really well with 0.8
     if (distAveSideFront > distAveSideRear) {
         swivelR();
     }
@@ -304,6 +309,7 @@ void goEast() {
         fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); //4
         getPerpendicular();
         fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); 
+        // getPerpendicular(); // just added for more better best perfection
         dropOffBlock();
         timeRef = millis();
         digitalWrite(frontSonarTrigger, HIGH);
@@ -333,44 +339,33 @@ void goNorth() {
   switch(blockSize) {
     case 1: { //delivered south block
       setCmRR();
-      if (cmRR < (loadingLoc[blockCount] + 1) || (millis() < timeRef + 500)) { //timeRef from hardLeft
+      //if (cmRR < (loadingLoc[blockCount] + 2) || (millis() < timeRef + 500)) { //timeRef from hardLeft
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
-      }
-      else if (cmRR >= (loadingLoc[blockCount] + 1 && cmF < loadingLocR[blockCount] + 27)) {
+      //} else...
+      if (cmRR >= 138 && cmF < 99) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
         freeze();
         getPerpendicular();
+        fineTune(false, 138);  //loadingLoc[blockCount] + 2);
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
       break;
     }
     case 2: { //delivering east block
-      if (cmF > eastLocF[eastColorLoc[currentBlockColor]]) {
+      setCmRR();
+      if (cmF > eastLocF[eastColorLoc[currentBlockColor]] && cmRR < 109) {
         parallelMove(90); // speed 2
       }
-      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && millis() < timeRef + 400) {
-        if (eastColorLoc[currentBlockColor] != 5) {       
+      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && millis() > timeRef + 100) {
+          parallelMove(60);
+          delay(300);
+          getPerpendicular();
+          fineTune(true, eastLocF[eastColorLoc[currentBlockColor]] - 3.2); //4
+          getPerpendicular();
+          fineTune(true, eastLocF[eastColorLoc[currentBlockColor]] - 3.2); 
           dropOffBlock();
-        }
-        else {
-          dropOffBlock();
-          timeRef = millis();
-          while (millis() - timeRef < 1000) {
-          reverse();
-          }
-          freeze();
-        }
-        timeRef = millis();
-        while (cmF > 91) {  // > 85
-          parallelMove(100);  //speed 5
-          digitalWrite(frontSonarTrigger, HIGH);
-          pulse = pulseIn(4, HIGH);
-          cmF = pulse * 0.0173;
-          delay(40); //for the sonar....
-        }
-        digitalWrite(frontSonarTrigger, LOW);
-        hardLeft(1, 0);
+          blockSize = 1; //this works because southBlockCount increment already occurred - pretty!   
       }
       break;
     }
@@ -487,11 +482,13 @@ void readEastColors() {
     freeze();
     delay(200);
     northCount++;
-    timeRef = millis();
+    fineTune(false, 138);
+    getPerpendicular();
+    /* timeRef = millis();
     while (millis() - timeRef < 1300) {
       reverse();
     }
-    freeze();
+    freeze(); */
   }
   else{
     parallelMove(80);
@@ -511,13 +508,17 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     maxDistanceFromWall = 14;
     minDistanceFromWall = 11;
   }
+  else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
+    maxDistanceFromWall = 25.0; //21 //7.25 inches... // also need cushion for turn to east wall
+    minDistanceFromWall = 22.0; //18.5
+  }
   else if ((hardLeftCount - 2)%4 == 0) { // going south
-    maxDistanceFromWall = 21.0; //21 //7.25 inches...
-    minDistanceFromWall = 18.8; //18.5
+    maxDistanceFromWall = 10;//19.7; //21 //7.25 inches...  //perfect so far was 21.0
+    minDistanceFromWall = 7; //17.5; //18.5 //perfect so far was 18.8
   }
   else if ((hardLeftCount - 4)%4 == 0 && blockSize == 1) { //returning north from delivering south block
-    maxDistanceFromWall = 25.0; //7.25 inches...
-    minDistanceFromWall = 22.0;
+    maxDistanceFromWall = 25.0; //7.25 inches... // was 26.0 for a long time
+    minDistanceFromWall = 22.0; // was 23.0 for a long time
   }
   else { // SOUTH WALL
     maxDistanceFromWall = 20.7; //20; //16.5; //FINAL 20.3 almost perfect
@@ -607,7 +608,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(350); // turnTimer); //tests returned 319
+   delay(355); // turnTimer); //tests returned 319 // 350 has been working perfectly
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
@@ -684,8 +685,8 @@ void freeze() {
 }
 
 void reverse() {
-  SetSpeed(0, true, topSpeed*0.7);
-  SetSpeed(1, true, topSpeed*0.7);
+  SetSpeed(0, true, topSpeed*0.8); //long time was set to 0.7
+  SetSpeed(1, true, topSpeed*0.8);
 }
 
 // ______QTI____________  ///////////////////////////////////////////////////////
@@ -846,7 +847,7 @@ void closesmallservo() {
   while(pos1 > 56) {                
     myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
     delay(15);                     // waits 15ms for the servo to reach the position
-    if (digitalRead(inpin)==LOW) {
+    if (digitalRead(inpin)==LOW && pos1<=124) { //added pos1<=125 to prevent premature stop by sensor on long blocks
      //  Serial.print("Final closed Position: ");  // Monitor the last position of the servo
      //  Serial.println(pos1);
       break;
@@ -870,7 +871,7 @@ void closesmallservo() {
     blockSize = 0;
     Serial.println("Air block");}
   else {
-    blockSize = 999;
+    blockSize = 0;
     freeze(); // do something here....
   }
 }
