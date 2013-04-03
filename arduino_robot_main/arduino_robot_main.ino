@@ -139,7 +139,7 @@ void loop() {
 void goWest() {
   straight();
   blockSize = 0;
-  if (hardLeftCount < 200) { //34 inches for rear? //used to be <2
+  if (hardLeftCount < 2) { //34 inches for rear? //used to be <2
     delay(30);
     setCmRR();
     if (cmRR > 69 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
@@ -152,7 +152,7 @@ void goWest() {
   }
   else {
     setCmRR();
-    if (cmRR > 69 && cmF < 33 && (millis() > timeRef + 200)) { //24
+    if (cmRR > 50 && cmF < 33 && (millis() > timeRef + 300)) { //24
       freeze();
       getPerpendicular();
       fineTune(true, 25.3); //26 was great
@@ -195,7 +195,7 @@ void goSouthForBlock() {
       //}
       break;
     case 1:  // south block //improve the fluctuations
-      if (southBlockCount == 0) { 
+      if (southBlockCount == 100) { 
         if (cmF > 37 ) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
           parallelMove(100);
         }
@@ -240,8 +240,8 @@ void getPerpendicular() {
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
   float difference = distAveSideFront - distAveSideRear;
-  while (abs(difference) > 0.6) { //working really well with 0.8
-    if (distAveSideFront > distAveSideRear) {
+  while (abs(difference) > 0.5) { //working really well with 0.8
+    if (distAveSideFront - 0.1 > distAveSideRear) {
         swivelR();
     }
     else {
@@ -326,12 +326,12 @@ void goEast() {
       }
       break;
     case 2: //deliver east block
-      if (cmF > 26 && millis() < timeRef + 300) {
+      if (cmF > 25 && millis() < timeRef + 300) {
         straight(); //parallelMove(110);
       }
-      else if (cmF <= 26) {
+      else if (cmF <= 25) {
         getPerpendicular();
-        fineTune(true, 28);
+        fineTune(true, 20);
         hardLeft(1, 0);
       }
       break;
@@ -346,10 +346,10 @@ void goNorth() {
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
       //} else...
-      if (cmRR >= 138 && cmF < 99) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
+      if (cmRR >= 134 && cmF < 101) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
         freeze();
         getPerpendicular();
-        fineTune(false, 138);  //loadingLoc[blockCount] + 2);
+        fineTune(false, 135);  //loadingLoc[blockCount] + 2);
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
@@ -368,7 +368,7 @@ void goNorth() {
           getPerpendicular();
           fineTune(true, eastLocF[eastColorLoc[currentBlockColor]] - 3.2); 
           dropOffBlock();
-          blockSize = 1; //this works because southBlockCount increment already occurred - pretty!   
+          blockSize = 1; //this works because southBlockCount increment already occurred - pretty, no!   
       }
       break;
     }
@@ -619,7 +619,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(360); // turnTimer); //tests returned 319 // 350 has been working perfectly
+   delay(210); // turnTimer); //tests returned 319 // 350 has been working perfectly
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
@@ -675,7 +675,7 @@ void fineRight() {
 }
 
 void straight() {
- SetSpeed(0, false, int(topSpeed*0.98)); //0.96 // 45); //left wheel moves faster, 0.98 may be best
+ SetSpeed(0, false, int(topSpeed)); //*0.98)); //0.96 // 45); //left wheel moves faster, 0.98 may be best
  SetSpeed(1, false, topSpeed); 
  //delay(100);
 }
