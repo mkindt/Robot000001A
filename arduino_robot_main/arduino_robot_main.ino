@@ -385,7 +385,10 @@ void pickUpBlock() {
     delay(500);
     if (blockSize == 999) {
       opensmallservo();
+      liftarm();
+      lowerarm();
       closesmallservo();
+      
     }
   // blockSize = testLoadingSize[blockCount];
   // currentBlockColor = testLoadingColors[blockCount];
@@ -408,12 +411,17 @@ void pickUpBlock() {
       opensmallservo();      // Release block
       delay(500);
   }
-  while (currentBlockColor == 999) { //RISKY WHILE LOOP.....
+  if (currentBlockColor == 999) { //RISKY WHILE LOOP.....
     opensmallservo();
     delay(100);
+    liftarm();
+    lowerarm();
     closesmallservo();
     delay(500);
-  } 
+  }
+  if (currentBlockColor == 999) {
+    currentBlockColor = 5;
+  }
   liftarm();             // Lift the gripper arm  
   blockCount = blockCount + 1;
   delay(1000); // waits one second for other servo to lift arm
@@ -833,7 +841,7 @@ void setCmRR() {
 void opensmallservo() {
 //  Serial.print("Opening Gripper. Final Position: ");
 //  myservo2.write(pos2);
-  for(pos1; pos1 < 145; pos1++) {  // small servo opens in steps of 1 degree
+  for(pos1; pos1 < 153; pos1++) {  // small servo opens in steps of 1 degree
     myservo1.write(pos1);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
@@ -846,7 +854,7 @@ void closesmallservo() {
 //  Serial.print("Closing Gripper. ");
 //  Serial.println();
     // Pull Press Sensor input up
-  pos1 = 145;           // initialize small servo position
+  pos1 = 153;           // initialize small servo position
   while(pos1 > 56) {                
     myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
     delay(15);                     // waits 15ms for the servo to reach the position
@@ -880,14 +888,14 @@ void closesmallservo() {
 }
 
 void liftarm() {
- for(pos2 = 7; pos2 < 100; pos2 += 1) { // big servo lifts arm in steps of 1 degree
+ for(pos2 = 12; pos2 < 120; pos2 += 1) { // big servo lifts arm in steps of 1 degree
     myservo2.write(pos2);              // tell big servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
 }
 
 void lowerarm() {
-  for(pos2 = 100; pos2>=7; pos2-=1) {   // big servo lowers arm
+  for(pos2 = 120; pos2>=12; pos2-=1) {   // big servo lowers arm
     myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
