@@ -30,7 +30,7 @@ int LED = 27;//pinD
 ////////////////// END GRIPPER /////////
 float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.1, 77.5 };//adjusted for center of robot
 float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for center of robot
-float eastLocR[] = { 103.0, 110.0, 117.0, 124.0, 131.0, 138.0 };
+float eastLocR[] = { 107.0, 114.6, 122.2, 129.9, 137.5, 145.1 };
 //float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
 // int eastColorLoc[] = { 0, 0, 0, 0, 0, 0 };
 // int southColorLoc[] = { 0, 0, 0, 0, 0, 0 }; 
@@ -151,11 +151,11 @@ void goWest() {
   if (hardLeftCount < 2) { //34 inches for rear? //used to be <2
     delay(30);
     setCmRR();
-    if (cmRR > 69 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
+    if (cmRR > 67 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
       freeze();
       dPrint("front in the turn is ", cmF);
       getPerpendicular();
-      fineTune(false, 71.7); //71 seemed perfect
+      fineTune(false, 71.8); //71 seemed perfect
       hardLeft(1, 0); //CURRENTLY BLIND
     }
   }
@@ -164,7 +164,7 @@ void goWest() {
     if (cmRR > 50 && cmF < 33 && (millis() > timeRef + 300)) { //24
       freeze();
       getPerpendicular();
-      fineTune(true, 25.3); //26 was great
+      fineTune(true, 25.0); //26 was great
       hardLeft(1, 0);
     }
   }
@@ -178,7 +178,7 @@ void goSouthForBlock() {
       //if (cmR < (loadingLocR[blockCount] + 7) || RCTime(11) > QTIref ) 
       //  parallelMove(60);
       //}
-      if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref && millis() > timeRef + 300) { // +9 should be dead-on
+      if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref && millis() > timeRef + 500) { // +9 should be dead-on
          parallelMove(70);
          delay(200);
           //if (cmF <= loadingLoc[blockCount] + 10 && cmF >= loadingLoc[blockCount] - 10) // won't work with sonar/blocks
@@ -204,27 +204,29 @@ void goSouthForBlock() {
       //}
       break;
     case 1:  // south block //improve the fluctuations
-      if (southBlockCount == 100) { 
-        if (cmF > 37 ) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
+      if (southBlockCount == 0) { /// need to use this as long as possible, risks of bad rear sonar
+        if (cmF > 37 ) { //ideally 25.5  
           parallelMove(100);
         }
         else if (cmF > 27) {
           parallelMove(70);
         }
-        else if (cmF <= 24) { //27 //24  // FRONT SONAR WILL FAIL WITH BLOCK ALREADY TO SOUTH 
+        else if (cmF <= 27) { //27 //24  // FRONT SONAR WILL FAIL WITH BLOCK ALREADY TO SOUTH 
+          getPerpendicular();
+          fineTune(1, 22.5);
           hardLeft(1, 0);
         }
       }
       else {
         setCmR();
-        if (cmF <= 30 && cmR > 100) { // when front is 23.5,  rear (not RR) is 137, but only away from blocks
+        if (cmF <= 30 && cmR > 125) { // when front is 23.5,  rear (not RR) is 137, but only away from blocks
           freeze();
           getPerpendicular();
-          fineTune(false, 137);
+          fineTune(2, 138);
           hardLeft(1, 0);
         }
         else if (cmR < 80) {
-          parallelMove(100);
+          parallelMove(90);
         }
         else if (cmR < 100) {
           parallelMove(70);
@@ -239,8 +241,9 @@ void goSouthForBlock() {
       if (cmR < 82) {         //TRYING REAR             // cmF > 112)
         parallelMove(100);
       }
-      else if (cmR >= 82) { // cmF <= 112) 
-        hardLeft(1, true); //softening might not work as robot gets closer to south wall
+      else if (cmR >= 82) { // cmF <= 112)
+        getPerpendicular();
+        hardLeft(1, 0); //previously true//softening might not work as robot gets closer to south wall
       }
       break;
   }
@@ -249,7 +252,7 @@ void getPerpendicular() {
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
   float difference = distAveSideFront - distAveSideRear;
-  while (abs(difference) > 0.5) { //working really well with 0.8
+  while (abs(difference) > 0.6) { //working really well with 0.8
     if (distAveSideFront - 0.1 > distAveSideRear) {
         swivelR();
     }
@@ -264,7 +267,7 @@ void getPerpendicular() {
 }
 
 /////FINETUNE   ////////////////////////////////////////////////////////////////////////
-void fineTune(boolean chooseSonar, float destination ) {
+void fineTune(int chooseSonar, float destination ) {
   topSpeed = 60;
   if (chooseSonar == true) {
     setCmF();
@@ -281,7 +284,7 @@ void fineTune(boolean chooseSonar, float destination ) {
       difference = cmF - destination;
     }
   }
-  else { //rear sonar
+  else if (chooseSonar == 0) { //right rear sonar
     setCmRR();
     float difference = cmRR - destination;
     while (abs(difference) > 1.2) {
@@ -294,6 +297,21 @@ void fineTune(boolean chooseSonar, float destination ) {
       delay(40);
       setCmRR();
       difference = cmRR - destination;
+    }
+  }
+    else if (chooseSonar == 2) { //rear sonar
+    setCmR();
+    float difference = cmR - destination;
+    while (abs(difference) > 1.2) {
+      if (difference > 0) { // if rear is further from far wall than target
+        reverse();
+      }
+      else {
+        parallelMove(60);
+      }
+      delay(40);
+      setCmR();
+      difference = cmR - destination;
     }
   }
 }
@@ -335,13 +353,17 @@ void goEast() {
       }
       break;
     case 2: //deliver east block
-      if (cmF > 25 && millis() < timeRef + 300) {
-        straight(); //parallelMove(110);
+      setCmR();
+      // if (cmF > 27 && cmR < 61 ) {
+      //   straight(); //parallelMove(110);
+      // } else
+      if (cmF <= 30 && cmR > 55 && millis() > timeRef + 200) {
+        // getPerpendicular(); cant....
+        fineTune(true, 23);
+        hardLeft(0, 0);
       }
-      else if (cmF <= 25) {
-        getPerpendicular();
-        fineTune(true, 20);
-        hardLeft(1, 0);
+      else {
+        straight();
       }
       break;
   }
@@ -351,34 +373,39 @@ void goNorth() {
   switch(blockSize) {
     case 1: { //delivered south block
       setCmRR();
-      //if (cmRR < (loadingLoc[blockCount] + 2) || (millis() < timeRef + 500)) { //timeRef from hardLeft
-        parallelMove(100); // speed 5
-        dPrint("made it to goNorth, cmR = ", cmR);
-      //} else...
-      if (cmRR >= 134 && cmF < 101) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
+      // if (cmRR < (loadingLoc[blockCount] + 2) || (millis() < timeRef + 500)) { //timeRef from hardLeft
+      // parallelMove(100); // speed 5
+      // dPrint("made it to goNorth, cmR = ", cmR);
+      // } else...
+      if (cmRR >= 126 && cmF < 100) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
         freeze();
         getPerpendicular();
-        fineTune(false, 135);  //loadingLoc[blockCount] + 2);
+        fineTune(false, 136);  //loadingLoc[blockCount] + 2);
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
+      }
+      else {
+        parallelMove(100);
       }
       break;
     }
     case 2: { //delivering east block
       setCmRR();
-      if (cmF > eastLocF[eastColorLoc[currentBlockColor]] && cmRR < 109) {
-        parallelMove(90); // speed 2
+      if (cmF <= 130 && cmRR > eastLocR[eastColorLoc[currentBlockColor]] - 6 && millis() > timeRef + 300) {
+        parallelMove(60);
+        getPerpendicular();
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] + 2);
+        getPerpendicular();
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] + 2);
+        dropOffBlock();
+        crookedReverse();
+        delay(700);
+        getPerpendicular();
+        blockSize = 1; //this works because southBlockCount increment already occurred - pretty, no!   
       }
-      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && cmRR > 109 && millis() > timeRef + 100) {
-          parallelMove(60);
-          delay(300);
-          getPerpendicular();
-          fineTune(true, eastLocF[eastColorLoc[currentBlockColor]] - 3.2); //4
-          getPerpendicular();
-          fineTune(true, eastLocF[eastColorLoc[currentBlockColor]] - 3.2); 
-          dropOffBlock();
-          blockSize = 1; //this works because southBlockCount increment already occurred - pretty, no!   
-      }
+      else {
+        parallelMove(90);
+      }     
       break;
     }
   }
@@ -420,7 +447,11 @@ void pickUpBlock() {
       opensmallservo();      // Release block
       delay(500);
   }
-  if (currentBlockColor == 999) { //RISKY WHILE LOOP.....
+  if (currentBlockColor == 999) { //used to be RISKY WHILE LOOP.....
+    opensmallservo();
+    closesmallservo();
+  }
+  if (currentBlockColor == 999) {
     opensmallservo();
     delay(100);
     liftarm();
@@ -431,7 +462,7 @@ void pickUpBlock() {
   if (currentBlockColor == 999) {
     currentBlockColor = 5;
   }
-  liftarm();             // Lift the gripper arm  
+  liftarm();
   blockCount = blockCount + 1;
   delay(1000); // waits one second for other servo to lift arm
      myservo1.detach();
@@ -526,23 +557,27 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
     maxDistanceFromWall = 14;
-    minDistanceFromWall = 11;
+    minDistanceFromWall = 12.5;
   }
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
-    maxDistanceFromWall = 25.0; //21 //7.25 inches... // also need cushion for turn to east wall
+    maxDistanceFromWall = 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
     minDistanceFromWall = 22.0; //18.5
   }
   else if ((hardLeftCount - 2)%4 == 0) { // going south
-    maxDistanceFromWall = 20.7; //21 //7.25 inches...  //perfect so far was 21.0
-    minDistanceFromWall = 18.1; //17.5; //18.5 //perfect so far was 18.8
+    maxDistanceFromWall = 19.9; //21 //7.25 inches...  //perfect so far was 21.0
+    minDistanceFromWall = 18.4; //17.5; //18.5 //perfect so far was 18.8
   }
   else if ((hardLeftCount - 4)%4 == 0 && blockSize == 1) { //returning north from delivering south block
-    maxDistanceFromWall = 25.0; //7.25 inches... // was 26.0 for a long time
+    maxDistanceFromWall = 24.5; //7.25 inches... // was 26.0 for a long time
     minDistanceFromWall = 22.0; // was 23.0 for a long time
   }
-  else { // SOUTH WALL
-    maxDistanceFromWall = 20.7; //20; //16.5; //FINAL 20.3 almost perfect
-    minDistanceFromWall = 17.9; //17.5; //14; //FINAL 17.5 almost perfect
+  else if ((hardLeftCount - 3)%4 == 0) { // SOUTH WALL
+    maxDistanceFromWall = 20.5; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
+    minDistanceFromWall = 18.8; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
+  }
+  else  { //delivering east block
+    maxDistanceFromWall = 19.0; //20; //16.5; //FINAL 20.3 almost perfect
+    minDistanceFromWall = 17.0; //17.5; //14; //FINAL 17.5 almost perfect
   }
   if (SetTopSpeed == 999) { // to soften a hardLeft turn
     topSpeed = 110;
@@ -605,12 +640,18 @@ void hardLeft(int calibrate, boolean soften) {
  if (calibrate == 0) { //recalibrate
    hardLeftTurnCounter = 0;
    timeRef = millis();
-   while (sideFront - sideRear < 0){ //strange reading from this corner, previously < 0
+   delay(160);
+   while (sideFront - sideRear < 0){ 
      delay(40);
      //hardLeftTurnCounter = hardLeftTurnCounter + 1;
      //side calibration worked great until we increased height of side sonars, now rear value is small
      sideFront = pingWall(3); 
      sideRear = pingWall(2);
+     if (sideFront - sideRear < 0) {
+       delay(20);
+       sideFront = pingWall(3); 
+       sideRear = pingWall(2);
+     }
        debugPrint("");
        debugPrint("hardLeftCounter is ");
        debugPrint(""+String(int(hardLeftTurnCounter)));
@@ -628,7 +669,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(210); // turnTimer); //tests returned 319 // 350 has been working perfectly
+   delay(230); // turnTimer); //tests returned 319 // 350 has been working perfectly
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
@@ -655,7 +696,10 @@ void hardLeft(int calibrate, boolean soften) {
  if ((hardLeftCount - 3)%4 == 0 && blockSize == 1) {  //going east with a south block
    getPerpendicular();
  }
- if ((hardLeftCount - 2)%4 == 0 && blockCount >= 1) {
+ else if ((hardLeftCount - 2)%4 == 0 && blockCount >= 1) {
+   getPerpendicular();
+ }
+ else if ((hardLeftCount - 4)%4 == 0) { 
    getPerpendicular();
  }
 }
@@ -705,8 +749,12 @@ void freeze() {
 }
 
 void reverse() {
-  SetSpeed(0, true, topSpeed*0.8); //long time was set to 0.7
+  SetSpeed(0, true, topSpeed*0.9); //long time was set to 0.7
   SetSpeed(1, true, topSpeed*0.8);
+}
+void crookedReverse() {
+  SetSpeed(0, true, topSpeed*0.8);
+  SetSpeed(1, true, topSpeed);
 }
 
 // ______QTI____________  ///////////////////////////////////////////////////////
@@ -867,7 +915,7 @@ void closesmallservo() {
   while(pos1 > 56) {                
     myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
     delay(15);                     // waits 15ms for the servo to reach the position
-    if (digitalRead(inpin)==LOW && pos1<=121) { //added pos1<=125 to prevent premature stop by sensor on long blocks
+    if (digitalRead(inpin)==LOW && pos1<=119) { //added pos1<=125 to prevent premature stop by sensor on long blocks
      //  Serial.print("Final closed Position: ");  // Monitor the last position of the servo
      //  Serial.println(pos1);
       break;
@@ -881,16 +929,17 @@ void closesmallservo() {
     blockSize = 2;
     Serial.println("Rail block");
   }
-  else if ((pos1>=85)&&(pos1<=100)) {
+  else if ((pos1>=85)&&(pos1<=103)) {
     color();
     blockSize = 1;
     Serial.println("Sea block");
   }
-  else if ((pos1>=57)&&(pos1<=80)) {
+  else if ((pos1>=50)&&(pos1<=84)) {
     color();
     blockSize = 0;
     Serial.println("Air block");}
   else {
+    //color();
     blockSize = 0;
     freeze(); // do something here....
   }
@@ -912,9 +961,6 @@ void lowerarm() {
 
 void color() {
   currentBlockColor = detectColor(out);
-  //need to have statement here to detect again if no color is undetermined
-  //define integer in void color scope.
- // Serial.print("\n\n\n");
   delay(1000);
 }
 
