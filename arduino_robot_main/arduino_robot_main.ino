@@ -148,7 +148,7 @@ void loop() {
 void goWest() {
   straight();
   blockSize = 0;
-  if (hardLeftCount < 200) { //34 inches for rear? //used to be <2
+  if (hardLeftCount < 2) { //34 inches for rear? //used to be <2
     delay(30);
     setCmRR();
     if (cmRR > 69 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
@@ -161,7 +161,7 @@ void goWest() {
   }
   else {
     setCmRR();
-    if (cmRR > 69 && cmF < 33 && (millis() > timeRef + 200)) { //24
+    if (cmRR > 50 && cmF < 33 && (millis() > timeRef + 300)) { //24
       freeze();
       getPerpendicular();
       fineTune(true, 25.3); //26 was great
@@ -204,7 +204,7 @@ void goSouthForBlock() {
       //}
       break;
     case 1:  // south block //improve the fluctuations
-      if (southBlockCount == 0) { 
+      if (southBlockCount == 100) { 
         if (cmF > 37 ) { //ideally 25.5  ////////////// REAR OR FRONT SONAR??? TEST REAR!!!!!!
           parallelMove(100);
         }
@@ -249,8 +249,8 @@ void getPerpendicular() {
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
   float difference = distAveSideFront - distAveSideRear;
-  while (abs(difference) > 0.6) { //working really well with 0.8
-    if (distAveSideFront > distAveSideRear) {
+  while (abs(difference) > 0.5) { //working really well with 0.8
+    if (distAveSideFront - 0.1 > distAveSideRear) {
         swivelR();
     }
     else {
@@ -335,11 +335,13 @@ void goEast() {
       }
       break;
     case 2: //deliver east block
-      if (cmF > 28 && millis() < timeRef + 300) {
+      if (cmF > 25 && millis() < timeRef + 300) {
         straight(); //parallelMove(110);
       }
-      else if (cmF <= 28) {
-        hardLeft(0, 0);
+      else if (cmF <= 25) {
+        getPerpendicular();
+        fineTune(true, 20);
+        hardLeft(1, 0);
       }
       break;
   }
@@ -353,10 +355,10 @@ void goNorth() {
         parallelMove(100); // speed 5
         dPrint("made it to goNorth, cmR = ", cmR);
       //} else...
-      if (cmRR >= 138 && cmF < 99) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
+      if (cmRR >= 134 && cmF < 101) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
         freeze();
         getPerpendicular();
-        fineTune(false, 138);  //loadingLoc[blockCount] + 2);
+        fineTune(false, 135);  //loadingLoc[blockCount] + 2);
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
@@ -367,7 +369,7 @@ void goNorth() {
       if (cmF > eastLocF[eastColorLoc[currentBlockColor]] && cmRR < 109) {
         parallelMove(90); // speed 2
       }
-      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && millis() > timeRef + 100) {
+      else if (cmF <= eastLocF[eastColorLoc[currentBlockColor]] && cmRR > 109 && millis() > timeRef + 100) {
           parallelMove(60);
           delay(300);
           getPerpendicular();
@@ -375,7 +377,7 @@ void goNorth() {
           getPerpendicular();
           fineTune(true, eastLocF[eastColorLoc[currentBlockColor]] - 3.2); 
           dropOffBlock();
-          blockSize = 1; //this works because southBlockCount increment already occurred - pretty!   
+          blockSize = 1; //this works because southBlockCount increment already occurred - pretty, no!   
       }
       break;
     }
@@ -392,7 +394,10 @@ void pickUpBlock() {
     delay(500);
     if (blockSize == 999) {
       opensmallservo();
+      liftarm();
+      lowerarm();
       closesmallservo();
+      
     }
   // blockSize = testLoadingSize[blockCount];
   // currentBlockColor = testLoadingColors[blockCount];
@@ -415,12 +420,17 @@ void pickUpBlock() {
       opensmallservo();      // Release block
       delay(500);
   }
-  while (currentBlockColor == 999) { //RISKY WHILE LOOP.....
+  if (currentBlockColor == 999) { //RISKY WHILE LOOP.....
     opensmallservo();
     delay(100);
+    liftarm();
+    lowerarm();
     closesmallservo();
     delay(500);
-  } 
+  }
+  if (currentBlockColor == 999) {
+    currentBlockColor = 5;
+  }
   liftarm();             // Lift the gripper arm  
   blockCount = blockCount + 1;
   delay(1000); // waits one second for other servo to lift arm
@@ -618,7 +628,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(360); // turnTimer); //tests returned 319 // 350 has been working perfectly
+   delay(210); // turnTimer); //tests returned 319 // 350 has been working perfectly
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
@@ -674,7 +684,7 @@ void fineRight() {
 }
 
 void straight() {
- SetSpeed(0, false, int(topSpeed*0.98)); //0.96 // 45); //left wheel moves faster, 0.98 may be best
+ SetSpeed(0, false, int(topSpeed)); //*0.98)); //0.96 // 45); //left wheel moves faster, 0.98 may be best
  SetSpeed(1, false, topSpeed); 
  //delay(100);
 }
@@ -840,7 +850,7 @@ void setCmRR() {
 void opensmallservo() {
 //  Serial.print("Opening Gripper. Final Position: ");
 //  myservo2.write(pos2);
-  for(pos1; pos1 < 145; pos1++) {  // small servo opens in steps of 1 degree
+  for(pos1; pos1 < 153; pos1++) {  // small servo opens in steps of 1 degree
     myservo1.write(pos1);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
@@ -853,7 +863,7 @@ void closesmallservo() {
 //  Serial.print("Closing Gripper. ");
 //  Serial.println();
     // Pull Press Sensor input up
-  pos1 = 145;           // initialize small servo position
+  pos1 = 153;           // initialize small servo position
   while(pos1 > 56) {                
     myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
     delay(15);                     // waits 15ms for the servo to reach the position
@@ -887,14 +897,14 @@ void closesmallservo() {
 }
 
 void liftarm() {
- for(pos2 = 7; pos2 < 100; pos2 += 1) { // big servo lifts arm in steps of 1 degree
+ for(pos2 = 12; pos2 < 120; pos2 += 1) { // big servo lifts arm in steps of 1 degree
     myservo2.write(pos2);              // tell big servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
 }
 
 void lowerarm() {
-  for(pos2 = 100; pos2>=7; pos2-=1) {   // big servo lowers arm
+  for(pos2 = 120; pos2>=12; pos2-=1) {   // big servo lowers arm
     myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
@@ -927,13 +937,13 @@ int detectColor(int taosOutPin){
   red = white/colorRead(taosOutPin,1,1)*255;
   blue = white/colorRead(taosOutPin,2,1)*255;
   green = white/colorRead(taosOutPin,3,1)*255;
-// Serial.print("red ");
+  dPrint("red is ", red);
 //  Serial.println(red);
-//  Serial.print("blue ");
+dPrint("blue is ", blue);
 //  Serial.println(blue);
-//  Serial.print("green ");
+dPrint("green is ", green);
 //  Serial.println(green);
-
+// blue: R36 B159 G81
 if (red > 175 && red < 205 && blue > 45 && blue < 62 && green > 30 && green < 45) {
     Serial.println("Red Detected");
     return 0;
