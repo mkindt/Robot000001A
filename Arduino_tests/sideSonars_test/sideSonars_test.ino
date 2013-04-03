@@ -24,11 +24,12 @@ void loop(){
     float distAveSideRear = (sideRearTotal);
     /////********removed loops for testing********
     /////******loops are also too slow for realtime movement******
-    Serial.print(distAveSideFront);
+    dPrint("side front is ", distAveSideFront);
+    //Serial.print(distAveSideFront);
     Serial.print(" ");
+    dPrint("side front is ", distAveSideRear);
     Serial.print(distAveSideRear);
     Serial.print(" ");
-    Serial.print(distAveFront);
     Serial.println();
   delay(500);
 
@@ -49,3 +50,18 @@ float pingWall (int pingPin) {                             // Ping signal
   return microsecondsToCentimeters(pulseIn(pingPin, HIGH));
 }
 
+void dPrint(String string, float z){
+  debugPrint("");
+  debugPrint(string);
+  debugPrint(""+String(int(z)));
+  debugPrintLn("");
+}
+
+void debugPrintLn(String string){
+  Serial.println(string);
+  Serial1.println(string);
+}
+void debugPrint(String c){
+  Serial.print(c);
+  Serial1.print(c);
+}
