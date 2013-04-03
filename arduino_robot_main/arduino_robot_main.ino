@@ -94,7 +94,13 @@ void loop() {
   if (start == 0) { //startup calibration for sonars
     debugPrint("");
     debugPrint("test ");
-    delay(2000);
+  myservo2.attach(8);
+  for (pos2 = 100; pos2 < 120; pos2++) {
+    myservo2.write(pos2);
+    delay(15);
+  }
+    delay(1700);
+  myservo2.detach();
     dPrint("test of dPrint ", cmF);
     start = 1;
   }
@@ -406,11 +412,11 @@ void pickUpBlock() {
   freeze();
     myservo1.attach(9);
     myservo2.attach(8);
-    myservo1.write(145);
+    myservo1.write(153);
     lowerarm();           // Lower the arm to the block 
     closesmallservo();      //  Close gripper
     delay(500);
-    if (blockSize == 999) {
+    if (blockSize == 333) {
       opensmallservo();
       liftarm();
       lowerarm();
@@ -563,8 +569,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 22.0; // was 23.0 for a long time
   }
   else if ((hardLeftCount - 3)%4 == 0) { // SOUTH WALL
-    maxDistanceFromWall = 20.5; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
-    minDistanceFromWall = 18.8; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
+    maxDistanceFromWall = 19.9; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
+    minDistanceFromWall = 18.4; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
   }
   else  { //delivering east block
     maxDistanceFromWall = 19.0; //20; //16.5; //FINAL 20.3 almost perfect
@@ -925,13 +931,13 @@ void closesmallservo() {
     blockSize = 1;
     Serial.println("Sea block");
   }
-  else if ((pos1>=50)&&(pos1<=84)) {
+  else if ((pos1>=57)&&(pos1<=84)) {
     color();
     blockSize = 0;
     Serial.println("Air block");}
   else {
     //color();
-    blockSize = 0;
+    blockSize = 333;
     freeze(); // do something here....
   }
 }
