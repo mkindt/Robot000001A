@@ -146,7 +146,7 @@ void goWest() {
       freeze();
       dPrint("front in the turn is ", cmF);
       getPerpendicular();
-      fineTune(false, 71.6); //71 seemed perfect
+      fineTune(false, 71.8); //71 seemed perfect
       hardLeft(1, 0); //CURRENTLY BLIND
     }
   }
@@ -155,7 +155,7 @@ void goWest() {
     if (cmRR > 50 && cmF < 33 && (millis() > timeRef + 300)) { //24
       freeze();
       getPerpendicular();
-      fineTune(true, 25.2); //26 was great
+      fineTune(true, 25.0); //26 was great
       hardLeft(1, 0);
     }
   }
@@ -169,7 +169,7 @@ void goSouthForBlock() {
       //if (cmR < (loadingLocR[blockCount] + 7) || RCTime(11) > QTIref ) 
       //  parallelMove(60);
       //}
-      if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref && millis() > timeRef + 400) { // +9 should be dead-on
+      if (cmRR >= (loadingLocR[blockCount] + 9) && RCTime(11) < QTIref && millis() > timeRef + 500) { // +9 should be dead-on
          parallelMove(70);
          delay(200);
           //if (cmF <= loadingLoc[blockCount] + 10 && cmF >= loadingLoc[blockCount] - 10) // won't work with sonar/blocks
@@ -371,7 +371,7 @@ void goNorth() {
       if (cmRR >= 126 && cmF < 100) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
         freeze();
         getPerpendicular();
-        fineTune(false, 134);  //loadingLoc[blockCount] + 2);
+        fineTune(false, 136);  //loadingLoc[blockCount] + 2);
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
@@ -385,9 +385,9 @@ void goNorth() {
       if (cmF <= 130 && cmRR > eastLocR[eastColorLoc[currentBlockColor]] - 6 && millis() > timeRef + 300) {
         parallelMove(60);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]]);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] + 2);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]]);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] + 2);
         dropOffBlock();
         crookedReverse();
         delay(700);
@@ -555,16 +555,16 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 22.0; //18.5
   }
   else if ((hardLeftCount - 2)%4 == 0) { // going south
-    maxDistanceFromWall = 20.3; //21 //7.25 inches...  //perfect so far was 21.0
-    minDistanceFromWall = 17.8; //17.5; //18.5 //perfect so far was 18.8
+    maxDistanceFromWall = 19.9; //21 //7.25 inches...  //perfect so far was 21.0
+    minDistanceFromWall = 18.4; //17.5; //18.5 //perfect so far was 18.8
   }
   else if ((hardLeftCount - 4)%4 == 0 && blockSize == 1) { //returning north from delivering south block
-    maxDistanceFromWall = 25.0; //7.25 inches... // was 26.0 for a long time
+    maxDistanceFromWall = 24.5; //7.25 inches... // was 26.0 for a long time
     minDistanceFromWall = 22.0; // was 23.0 for a long time
   }
   else if ((hardLeftCount - 3)%4 == 0) { // SOUTH WALL
-    maxDistanceFromWall = 20.6; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
-    minDistanceFromWall = 17.8; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
+    maxDistanceFromWall = 20.5; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
+    minDistanceFromWall = 18.8; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
   }
   else  { //delivering east block
     maxDistanceFromWall = 19.0; //20; //16.5; //FINAL 20.3 almost perfect
@@ -631,6 +631,7 @@ void hardLeft(int calibrate, boolean soften) {
  if (calibrate == 0) { //recalibrate
    hardLeftTurnCounter = 0;
    timeRef = millis();
+   delay(160);
    while (sideFront - sideRear < 0){ 
      delay(40);
      //hardLeftTurnCounter = hardLeftTurnCounter + 1;
@@ -659,7 +660,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(210); // turnTimer); //tests returned 319 // 350 has been working perfectly
+   delay(230); // turnTimer); //tests returned 319 // 350 has been working perfectly
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
