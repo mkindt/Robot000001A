@@ -199,11 +199,12 @@ void goSouthForBlock() {
           }
           if (medianer (cmRArray) >= (loadingLocR[blockCount] + 9)) */
             getPerpendicular();
-            fineTune(false, loadingLocR[blockCount] + 9.9); //9.8//9.5 was almost perfect
+            fineTune(false, loadingLocR[blockCount] + 9.8); //9.8//9.5 was almost perfect
             perfection();
             getPerpendicular();
-            fineTune(false, loadingLocR[blockCount] + 9.9); //9.8
+            fineTune(false, loadingLocR[blockCount] + 9.8); //9.8
             pickUpBlock();
+            swivelL();
           }
           else {
             parallelMove(60);
@@ -223,16 +224,16 @@ void goSouthForBlock() {
         }
         else if (cmF <= 27) { //27 //24  // FRONT SONAR WILL FAIL WITH BLOCK ALREADY TO SOUTH 
           getPerpendicular();
-          fineTune(1, 22.5);
+          fineTune(1, 20.5);
           hardLeft(1, 0);
         }
       }
       else {
         setCmR();
-        if (cmF <= 30) { // && cmR > 125) // when front is 23.5,  rear (not RR) is 137, but only away from blocks
+        if (cmF <= 25) { // && cmR > 125) // when front is 23.5,  rear (not RR) is 137, but only away from blocks
           //freeze();
           getPerpendicular();
-          fineTune(2, 138);
+          //fineTune(2, 138);
           hardLeft(1, 0);
         }
         else if (cmR < 80) {
@@ -348,9 +349,10 @@ void goEast() {
         parallelMove(70);
       }
       else if (cmF <= southLocF[southColorLoc[currentBlockColor]] - 7) {
-        parallelMove(60);
-        delay(300);
+        //parallelMove(60);
+        //delay(500);
         getPerpendicular();
+        perfection();
         fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); //4
         getPerpendicular();
         fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); 
@@ -411,9 +413,9 @@ void goNorth() {
       if (cmF <= 130 && cmRR > eastLocR[eastColorLoc[currentBlockColor]] - 6 && millis() > timeRef + 300) {
         parallelMove(60);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 2);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 0.0);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 2);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 0.0);
         dropOffBlock();
         crookedReverse();
         delay(700);
@@ -550,7 +552,7 @@ void readEastColors() {
     freeze();
     delay(200);
     northCount++;
-    fineTune(false, 138);
+    fineTune(false, 136);
     getPerpendicular();
     /* timeRef = millis();
     while (millis() - timeRef < 1300) {
@@ -577,8 +579,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 12.5;
   }
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
-    maxDistanceFromWall = 26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
-    minDistanceFromWall = 24.5; //18.5
+    maxDistanceFromWall = 26.3;//26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
+    minDistanceFromWall = 25.0; //18.5
   }
   else if ((hardLeftCount - 2)%4 == 0) { // going south
     maxDistanceFromWall = 20.5; //21 //7.25 inches...  //perfect so far was 21.0
@@ -593,8 +595,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 17.9; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
   }
   else  { //delivering east block
-    maxDistanceFromWall = 19.0; //20; //16.5; //FINAL 20.3 almost perfect
-    minDistanceFromWall = 17.0; //17.5; //14; //FINAL 17.5 almost perfect
+    maxDistanceFromWall = 19.9;//19.0; //20; //16.5; //FINAL 20.3 almost perfect
+    minDistanceFromWall = 17.9;//17.0; //17.5; //14; //FINAL 17.5 almost perfect
   }
   if (SetTopSpeed == 999) { // to soften a hardLeft turn
     topSpeed = 110;
@@ -647,7 +649,7 @@ void hardLeft(int calibrate, boolean soften) {
  delay(100); //100
  SetSpeed(0, true, topSpeed*0.7);
  SetSpeed(1, false, topSpeed);
- delay(500);
+ delay(550); // for a long time was 500
  SetSpeed(0, true, 0);
  SetSpeed(1, false, topSpeed);
  
@@ -770,6 +772,7 @@ void reverse() {
   SetSpeed(1, true, topSpeed*0.8);
 }
 void crookedReverse() {
+  topSpeed = 110;
   SetSpeed(0, true, topSpeed*0.8);
   SetSpeed(1, true, topSpeed);
 }
@@ -1007,17 +1010,17 @@ dPrint("blue is ", blue);
 dPrint("green is ", green);
 //  Serial.println(green);
 // blue: R36 B159 G81
-if (red > 175 && red < 218 && blue > 45 && blue < 62 && green > 30 && green < 45) {
+if (red > 175 && red < 218 && blue > 48 && blue < 62 && green > 30 && green < 43) {
     Serial.println("Red Detected");
     return 0;
   }
 
- else if (red > 175 && red < 220 && blue > 37 && blue < 53 && green > 35 && green < 54) {
+ else if (red > 175 && red < 220 && blue > 36 && blue < 48 && green > 43 && green < 54) {
     Serial.println("Orange Detected");
     return 1;
   }
 
- else if (red > 65 && red < 80 && blue > 80 && blue < 100 && green > 90 && green < 120) {
+ else if (red > 65 && red < 93 && blue > 80 && blue < 100 && green > 90 && green < 120) {
     Serial.println("Green Detected");
     return 3;
   }
