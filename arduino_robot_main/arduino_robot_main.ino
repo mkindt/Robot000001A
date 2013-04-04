@@ -26,6 +26,7 @@ int S1 = 29;//pinA
 int S2 = 32;//pinE
 int S3 = 31;//pinF
 int out = 30;//pinC
+boolean irstatus;
 int LED = 27;//pinD
 ////////////////// END GRIPPER /////////
 float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.1, 77.5 };//adjusted for center of robot
@@ -167,10 +168,12 @@ void goWest() {
   }
   else {
     setCmRR();
-    if (cmRR > 50 && cmF < 33 && (millis() > timeRef + 300)) { //24
+    if (cmRR > 60 && cmF < 35 && (millis() > timeRef + 300)) { //24
+      //getPerpendicular();
+      //fineTune(true, 30.0); //26 was great
       freeze();
-      getPerpendicular();
-      fineTune(true, 25.0); //26 was great
+      //getPerpendicular();
+      fineTune(true, 24.5);
       hardLeft(1, 0);
     }
   }
@@ -196,9 +199,10 @@ void goSouthForBlock() {
           }
           if (medianer (cmRArray) >= (loadingLocR[blockCount] + 9)) */
             getPerpendicular();
-            fineTune(false, loadingLocR[blockCount] + 9.8); //9.5 was almost perfect
+            fineTune(false, loadingLocR[blockCount] + 9.9); //9.8//9.5 was almost perfect
+            perfection();
             getPerpendicular();
-            fineTune(false, loadingLocR[blockCount] + 9.8);
+            fineTune(false, loadingLocR[blockCount] + 9.9); //9.8
             pickUpBlock();
           }
           else {
@@ -225,8 +229,8 @@ void goSouthForBlock() {
       }
       else {
         setCmR();
-        if (cmF <= 30 && cmR > 125) { // when front is 23.5,  rear (not RR) is 137, but only away from blocks
-          freeze();
+        if (cmF <= 30) { // && cmR > 125) // when front is 23.5,  rear (not RR) is 137, but only away from blocks
+          //freeze();
           getPerpendicular();
           fineTune(2, 138);
           hardLeft(1, 0);
@@ -254,6 +258,13 @@ void goSouthForBlock() {
       break;
   }
 }
+void perfection() {
+  float distAveSideFront = pingWall(3); 
+  while (distAveSideFront > 20.4 || distAveSideFront < 18.5) {
+    parallelMove(80);
+    distAveSideFront = pingWall(3);
+  }
+}
 void getPerpendicular() {
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
@@ -273,12 +284,12 @@ void getPerpendicular() {
 }
 
 /////FINETUNE   ////////////////////////////////////////////////////////////////////////
-void fineTune(int chooseSonar, float destination ) {
+void fineTune(int chooseSonar, float destination) {
   topSpeed = 60;
   if (chooseSonar == true) {
     setCmF();
     float difference = cmF - destination;
-    while (abs(difference) > 1.2) {
+    while (abs(difference) > 1.3) { // 1.2 for a long time
       if (difference > 0) { // if front is further from far wall than target
         parallelMove(60);
       }
@@ -293,7 +304,7 @@ void fineTune(int chooseSonar, float destination ) {
   else if (chooseSonar == 0) { //right rear sonar
     setCmRR();
     float difference = cmRR - destination;
-    while (abs(difference) > 1.2) {
+    while (abs(difference) > 1.3) {
       if (difference > 0) { // if rear is further from far wall than target
         reverse();
       }
@@ -308,7 +319,7 @@ void fineTune(int chooseSonar, float destination ) {
     else if (chooseSonar == 2) { //rear sonar
     setCmR();
     float difference = cmR - destination;
-    while (abs(difference) > 1.2) {
+    while (abs(difference) > 1.3) {
       if (difference > 0) { // if rear is further from far wall than target
         reverse();
       }
@@ -400,9 +411,9 @@ void goNorth() {
       if (cmF <= 130 && cmRR > eastLocR[eastColorLoc[currentBlockColor]] - 6 && millis() > timeRef + 300) {
         parallelMove(60);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] + 2);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 2);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] + 2);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 2);
         dropOffBlock();
         crookedReverse();
         delay(700);
@@ -566,12 +577,12 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     minDistanceFromWall = 12.5;
   }
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
-    maxDistanceFromWall = 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
-    minDistanceFromWall = 22.0; //18.5
+    maxDistanceFromWall = 26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
+    minDistanceFromWall = 24.5; //18.5
   }
   else if ((hardLeftCount - 2)%4 == 0) { // going south
-    maxDistanceFromWall = 19.9; //21 //7.25 inches...  //perfect so far was 21.0
-    minDistanceFromWall = 18.4; //17.5; //18.5 //perfect so far was 18.8
+    maxDistanceFromWall = 20.5; //21 //7.25 inches...  //perfect so far was 21.0
+    minDistanceFromWall = 19.0; //17.5; //18.5 //perfect so far was 18.8
   }
   else if ((hardLeftCount - 4)%4 == 0 && blockSize == 1) { //returning north from delivering south block
     maxDistanceFromWall = 24.5; //7.25 inches... // was 26.0 for a long time
@@ -579,7 +590,7 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   else if ((hardLeftCount - 3)%4 == 0) { // SOUTH WALL
     maxDistanceFromWall = 19.9; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
-    minDistanceFromWall = 18.4; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
+    minDistanceFromWall = 17.9; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
   }
   else  { //delivering east block
     maxDistanceFromWall = 19.0; //20; //16.5; //FINAL 20.3 almost perfect
@@ -755,7 +766,7 @@ void freeze() {
 }
 
 void reverse() {
-  SetSpeed(0, true, topSpeed*0.9); //long time was set to 0.7
+  SetSpeed(0, true, topSpeed*0.8); //long time was set to 0.7
   SetSpeed(1, true, topSpeed*0.8);
 }
 void crookedReverse() {
@@ -996,12 +1007,12 @@ dPrint("blue is ", blue);
 dPrint("green is ", green);
 //  Serial.println(green);
 // blue: R36 B159 G81
-if (red > 175 && red < 205 && blue > 45 && blue < 62 && green > 30 && green < 45) {
+if (red > 175 && red < 218 && blue > 45 && blue < 62 && green > 30 && green < 45) {
     Serial.println("Red Detected");
     return 0;
   }
 
- else if (red > 175 && red < 205 && blue > 38 && blue < 53 && green > 35 && green < 50) {
+ else if (red > 175 && red < 220 && blue > 37 && blue < 53 && green > 35 && green < 54) {
     Serial.println("Orange Detected");
     return 1;
   }
@@ -1021,7 +1032,7 @@ if (red > 175 && red < 205 && blue > 45 && blue < 62 && green > 30 && green < 45
     return 4;
   }
 
- else if (red > 115 && red < 138 && blue > 40 && blue < 60 && green > 80 && green < 100) {
+ else if (red > 115 && red < 155 && blue > 40 && blue < 60 && green > 80 && green < 100) {
     Serial.println("Yellow Detected");
     return 2;
   }
@@ -1125,7 +1136,9 @@ void TCS3200setup() {
   return;
 }
 ///////////////////////////IR sensors
-
+//void checkIR() {
+//  while ((digitalRead(irPin1) != 1) || (digitalRead(irPin2) != 1)) {
+    
 void checkIRs() {
   //Checks the IRs at the pickup area to see if the bot is in place to pick up 
   //a block
@@ -1142,6 +1155,7 @@ void checkIRs() {
   irstatus = true;
   delay(1000);
 }
+}
 
 void slightBackup()  {
  //backup robot slightly 
@@ -1150,11 +1164,11 @@ void slightBackup()  {
    //we are not in position
    
    //move forward super slow
-   setSpeed(0,false, int(60*0.96));
-   setSpeed(0,false,60)
+   SetSpeed(0,false, int(60*0.96));
+   SetSpeed(0,false,60);
    //delay before check again
    delay(1500);
-   checkIRS();
+   checkIRs();
   }
 }
 
@@ -1162,10 +1176,10 @@ void slightForward()  {
   //go forward slightly
   debugPrintLn("Moving Forward slightly");
     while(irStatus == false){
-      setSpeed(0,true, int(60*0.96));
-      setSpeed(1,true,60);
+      SetSpeed(0,true, int(60*0.96));
+      SetSpeed(1,true,60);
       //delay before check again
       delay(1500);
-      checkIRS();
+      checkIRs();
     }
 }
