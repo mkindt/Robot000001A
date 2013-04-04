@@ -437,7 +437,7 @@ void pickUpBlock() {
     myservo1.write(153);
     lowerarm();           // Lower the arm to the block 
     closesmallservo();      //  Close gripper
-    delay(500);
+    delay(100);
     if (blockSize == 333) {
       opensmallservo();
       liftarm();
@@ -464,7 +464,7 @@ void pickUpBlock() {
     }
     //dropOffBlock();
       opensmallservo();      // Release block
-      delay(500);
+      delay(100);
   }
   if (currentBlockColor == 999) { //used to be RISKY WHILE LOOP.....
     opensmallservo();
@@ -472,18 +472,18 @@ void pickUpBlock() {
   }
   if (currentBlockColor == 999) {
     opensmallservo();
-    delay(100);
+    delay(50);
     liftarm();
     lowerarm();
     closesmallservo();
-    delay(500);
+    delay(100);
   }
   if (currentBlockColor == 999) {
     currentBlockColor = 5;
   }
   liftarm();
   blockCount = blockCount + 1;
-  delay(1000); // waits one second for other servo to lift arm
+  delay(50); // waits one second for other servo to lift arm
      myservo1.detach();
     myservo2.detach(); 
 }
@@ -494,9 +494,9 @@ void dropOffBlock() {
     myservo2.attach(8);
     lowerarm();            // Lower the gripper arm
     opensmallservo();      // Release block
-    delay(500);
+    delay(200);
     liftarm();            // Raise the gripper arm out of the way
-    delay(1000);           // waits one second for other servo to lift arm            
+    delay(200);           // waits one second for other servo to lift arm            
   currentBlockColor = 0;
        myservo1.detach();
     myservo2.detach(); 
@@ -571,7 +571,7 @@ void readEastColors() {
 ////PARALLELMOVE  ////////////////////////////////////////////////////////////////////////
 void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inches or 16.5cm
   if (start > 2) {
-    topSpeed = SetTopSpeed + 10;
+    topSpeed = SetTopSpeed + 15;
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
@@ -981,7 +981,7 @@ void lowerarm() {
 
 void color() {
   currentBlockColor = detectColor(out);
-  delay(1000);
+  delay(10);
 }
 
 int detectColor(int taosOutPin){
