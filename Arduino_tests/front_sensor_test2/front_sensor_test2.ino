@@ -60,16 +60,16 @@ debugPrint("");
  /// slight balloon shape, see published diagrams
  setCmR(); 
  // *******minimum value is ~17cm, any closer reads 29cm or more*************
- Serial.print("rear is ");
+ dPrint("rear is ", cmR);
  Serial.print(cmR);
  //delay(100);
   setCmF(); 
   setCmRR();
  // *******minimum value is ~17cm, any closer reads 29cm or more*************
  Serial.print("    front is ");
- Serial.print(cmF);
+ dPrint("    front is ", cmF);
  Serial.print(", rightRear is ");
- Serial.print(cmRR);
+ dPrint(", rightRear is ", cmRR);
  Serial.println();
  //delay(200);
 }
@@ -87,6 +87,14 @@ float medianer (float *x) {
   }
   return x[1]; // length divided by 2?
 }
+
+void dPrint(String string, float z){
+  debugPrint("");
+  debugPrint(string);
+  debugPrint(""+String(int(z)));
+  debugPrintLn("");
+}
+
 void debugPrintLn(String string){
   Serial.println(string);
   Serial1.println(string);
