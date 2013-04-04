@@ -203,6 +203,7 @@ void goSouthForBlock() {
             perfection();
             getPerpendicular();
             fineTune(false, loadingLocR[blockCount] + 9.8); //9.8
+            getPerpendicular();
             pickUpBlock();
             swivelL();
           }
@@ -349,14 +350,13 @@ void goEast() {
         parallelMove(70);
       }
       else if (cmF <= southLocF[southColorLoc[currentBlockColor]] - 7) {
-        //parallelMove(60);
-        //delay(500);
+        parallelMove(60);
+        delay(500);
         getPerpendicular();
-        perfection();
         fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); //4
         getPerpendicular();
         fineTune(true, southLocF[southColorLoc[currentBlockColor]] - 5); 
-        // getPerpendicular(); // just added for more better best perfection
+        getPerpendicular(); // just added for more better best perfection
         dropOffBlock();
         timeRef = millis();
         digitalWrite(frontSonarTrigger, HIGH);
@@ -399,7 +399,7 @@ void goNorth() {
       if (cmRR >= 126 && cmF < 100) {// bad syntax?(loadingLoc[blockCount] + 2 && cmF < loadingLocR[blockCount] + 27))
         freeze();
         getPerpendicular();
-        fineTune(false, 136);  //loadingLoc[blockCount] + 2);
+        fineTune(false, 135);  //loadingLoc[blockCount] + 2);
         hardLeft(1, 0); //dont soften turn
         digitalWrite(rearSonarTrigger, LOW);
       }
@@ -441,9 +441,9 @@ void pickUpBlock() {
     if (blockSize == 333) {
       opensmallservo();
       liftarm();
-      lowerarm();
-      closesmallservo();
-      
+      //lowerarm();
+      //closesmallservo();
+      blockSize = 0;
     }
   // blockSize = testLoadingSize[blockCount];
   // currentBlockColor = testLoadingColors[blockCount];
@@ -552,7 +552,7 @@ void readEastColors() {
     freeze();
     delay(200);
     northCount++;
-    fineTune(false, 136);
+    fineTune(false, 135);
     getPerpendicular();
     /* timeRef = millis();
     while (millis() - timeRef < 1300) {
@@ -571,7 +571,7 @@ void readEastColors() {
 ////PARALLELMOVE  ////////////////////////////////////////////////////////////////////////
 void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inches or 16.5cm
   if (start > 2) {
-    topSpeed = SetTopSpeed;
+    topSpeed = SetTopSpeed + 10;
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
@@ -935,7 +935,7 @@ void closesmallservo() {
   while(pos1 > 56) {                
     myservo1.write(pos1);          // tell servo to go to position in variable 'pos'
     delay(15);                     // waits 15ms for the servo to reach the position
-    if (digitalRead(inpin)==LOW && pos1<=119) { //added pos1<=125 to prevent premature stop by sensor on long blocks
+    if (digitalRead(inpin)==LOW && pos1<=118) { //added pos1<=125 to prevent premature stop by sensor on long blocks
      //  Serial.print("Final closed Position: ");  // Monitor the last position of the servo
      //  Serial.println(pos1);
       break;
