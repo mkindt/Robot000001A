@@ -21,7 +21,7 @@ Servo myservo2;   // large servo
  int val = 0;    // Variable to store the read value
  int pos1 = 0;    // variable to store the small servo position
  int pos2 = 0;    // variable to store the big servo position
-int S0 = 8;//pinB  don't use this pin
+int S0 = 8;//pinB  don't use this pin FOR GRIPPER
 int S1 = 29;//pinA
 int S2 = 32;//pinE
 int S3 = 31;//pinF
@@ -45,7 +45,7 @@ float eastLocR[] = { 107.0, 114.6, 122.2, 129.9, 137.5, 145.1 };
 // colors below will be measured and recorded in first passes unless we have access to competition boards
 // colorLoc indexes eastLocF and eastLocR: i.e. eastLocF[colorLoc[RED]]
 // char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
-int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 };
+int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 }; 
 int southColorLoc[] = { 2, 3, 0, 4, 1, 5 };
 float loadingLoc[] = { 138.11, 130.5, 122.87, 115.25, 107.63, 100.01, 92.39, 84.77, 77.15, 69.53, 61.91, 54.29, 46.67, 39.05, 0, 0};
 float loadingLocR[] = { 23.1, 30.71, 38.32, 45.93, 53.54, 61.15, 68.76, 76.37 };
@@ -533,33 +533,38 @@ void readEastColors() {
   else if (cmF < eastLocF[0] && cmR > eastLocR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000)
     topSpeed = 70;
     freeze();
-    setColor(int zz);
+    setColor(0);
     delay(300);
     northCount++;
   }
   else if (cmF < eastLocF[1] && cmR > eastLocR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000)
     //topSpeed = 80;
-    //freeze();
-    //delay(600);
+    freeze();
+    setColor(1);
+    delay(300);
     northCount++;
   }
   else if (cmF < eastLocF[2] && cmR > eastLocR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref) { // < 8000)
-    //freeze();
-    //delay(600);
+    freeze();
+    setColor(2);
+    delay(300);
     northCount++;
   }
   else if (cmF < eastLocF[3] && cmR > eastLocR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref) { // < 8000)
-    //freeze();
-    //delay(600);
+    freeze();
+    setColor(3);
+    delay(300);
     northCount++;
   }
   else if (cmF < eastLocF[4] && cmR > eastLocR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref) { // < 8000)
-    //freeze();
-    //delay(600);
+    freeze();
+    setColor(4);
+    delay(300);
     northCount++;
   }
   else if (cmF < eastLocF[5] && cmR > eastLocR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref) { // < 8000)
     freeze();
+    setColor(5);
     delay(200);
     northCount++;
     fineTune(false, 135);
@@ -995,9 +1000,8 @@ void color() {
 }
 
 void setColor(int zz) {
-  eastColorLoc[zz] = detectColor(outa);
+  eastColorLoc[detectColor(outa)] = zz;
 }
-  
 
 int detectColor(int taosOutPin){
   //isPresentTolerance will need to be something small if used in high light environment, large if used in dark environment.
@@ -1149,7 +1153,7 @@ void TCS3200setup() {
   //color response pin (only actual input from taos)
   pinMode(out, INPUT); //out pinC
   //communication freq output divider
-  pinMode(S0,OUTPUT); //S0 pinB
+  //pinMode(S0,OUTPUT); //S0 pinB
   pinMode(S1,OUTPUT); //S1 pinA 
   return;
 }
@@ -1163,7 +1167,7 @@ void TCS3200setupa() {
   //color response pin (only actual input from taos)
   pinMode(outa, INPUT); //out pinC
   //communication freq output divider
-  pinMode(S0a,OUTPUT); //S0 pinB
+  //pinMode(S0a,OUTPUT); //S0 pinB
   pinMode(S1a,OUTPUT); //S1 pinA 
   return;
 }
