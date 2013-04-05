@@ -532,6 +532,7 @@ void dropOffBlock() {
 }
 ////READEAST ////////////////////////////////////////////////////////////////////////
 void readEastColors() {
+  debugPrintLn("Incomming data is from the bottom color sensor");
   if (cmF < 24){
     hardLeft(1, 0);
   }
@@ -1372,13 +1373,15 @@ void checkIRs() {
   }
   else if (digitalRead(irPin2) != 1) {
     slightBackup();
-    irCounter++
-  }else{
+    irCounter++;
+}else if(irCounter >= 3){
+  debugPrintLn("IR ERROR. We tried to adjust too many times and didn't get it right");
+}
+  else{
   debugPrintLn("no move needed.");
   irstatus = true;
   delay(irDelay);
-}else if(irCounter >= 3){
-  debugPrintLn("IR ERROR. We tried to adjust too many times and didn't get it right");
+  }
 }
 
 void slightBackup()  {
@@ -1393,7 +1396,7 @@ void slightBackup()  {
    //delay before check again
    delay(irDelay);
    SetSpeed(0,false,0);
-   SetrSpeed(1,false,0);
+   SetSpeed(1,false,0);
    checkIRs();
   }
 }
