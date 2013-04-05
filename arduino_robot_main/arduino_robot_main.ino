@@ -641,7 +641,7 @@ void readEastColors() {
     freeze(); */
   }
   else{
-    parallelMove(70);
+    parallelMove(60);
     //QTIref = RCTime(11);
     //QTIref = (QTIref + RCTime(11))/2 ;
   }
@@ -689,6 +689,12 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   } 
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
+  if (distAveSideFront > 50) {
+    pingWall(3);
+  }
+  if (distAveSideRear > 50) {
+    pingWall(2);
+  }
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
   if (distAveSideFront > maxDistanceFromWall && distAveSideRear - distAveSideFront > 1 ){// 20 AND 7 originally
@@ -852,7 +858,7 @@ void freeze() {
 }
 
 void reverse() {
-  SetSpeed(0, true, topSpeed*0.8 + 2.0); //??? WTF //long time was set to 0.7
+  SetSpeed(0, true, topSpeed*0.8); //??? WTF //long time was set to 0.7
   SetSpeed(1, true, topSpeed*0.8);
 }
 void crookedReverse() {
@@ -1247,32 +1253,32 @@ dPrint("blue is ", blue);
 dPrint("green is ", green);
 //  Serial.println(green);
 // blue: R36 B159 G81
-if (red > 155 && red < 218 && blue > 48 && blue < 75 && green > 30 && green < 55) {
+if (red > 147 && red < 218 && blue > 48 && blue < 75 && green > 30 && green < 55) {
     Serial.println("Red Detected");
     return 0;
   }
 
- else if (red > 175 && red < 220 && blue > 36 && blue < 48 && green > 43 && green < 54) {
+ else if (red > 145 && red < 220 && blue > 36 && blue < 48 && green > 40 && green < 54) {
     Serial.println("Orange Detected");
     return 1;
   }
 
- else if (red > 65 && red < 93 && blue > 80 && blue < 105 && green > 80 && green < 120) {
+ else if (red > 65 && red < 93 && blue > 70 && blue < 105 && green > 80 && green < 120) {
     Serial.println("Green Detected");
     return 3;
   }
 
- else if (red > 118 && red < 145 && blue > 65 && blue < 90 && green > 59 && green < 85) {
+ else if (red > 99 && red < 145 && blue > 65 && blue < 90 && green > 59 && green < 88) {
     Serial.println("Brown Detected");
     return 5;
   }
 
- else if (red > 20 && red < 45 && blue > 150 && blue < 170 && green > 70 && green < 90) {
+ else if (red > 20 && red < 45 && blue > 133 && blue < 170 && green > 70 && green < 90) {
     Serial.println("Blue Detected");
     return 4;
   }
 
- else if (red > 115 && red < 155 && blue > 40 && blue < 60 && green > 80 && green < 100) {
+ else if (red > 101 && red < 155 && blue > 40 && blue < 60 && green > 77 && green < 100) {
     Serial.println("Yellow Detected");
     return 2;
   }
