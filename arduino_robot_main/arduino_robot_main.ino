@@ -512,6 +512,12 @@ void pickUpBlock() {
 //////DROPOFF  ////////////////////////////////////////////////////////////////////////
 void dropOffBlock() {
   freeze();
+  
+  //TODO: implement IR here
+  checkIRs();
+  
+  
+    
     myservo1.attach(9);
     myservo2.attach(8);
     relBlock(); //lowerarm();            // Lower the gripper arm
@@ -1352,9 +1358,12 @@ void checkIRs() {
   //Checks the IRs at the pickup area to see if the bot is in place to pick up 
   //a block
     if ((digitalRead(irPin1) != 1) && (digitalRead(irPin2) != 1))   {
+    debugPrintLn("Slightly moving back");
+    
     slightBackup();
   }
   else if (digitalRead(irPin1) != 1) {
+    debugPrintLn("Slightly moving forward");
     slightForward();
   }
   else if (digitalRead(irPin2) != 1) {
@@ -1376,7 +1385,9 @@ void slightBackup()  {
    SetSpeed(0,false, int(60*0.96));
    SetSpeed(0,false,60);
    //delay before check again
-   delay(1500);
+   delay(500);
+   SetSpeed(0,false,0);
+   SetrSpeed(1,false,0);
    checkIRs();
   }
 }
@@ -1388,7 +1399,9 @@ void slightForward()  {
       SetSpeed(0,true, int(60*0.96));
       SetSpeed(1,true,60);
       //delay before check again
-      delay(1500);
+      delay(500);
+      SetSpeed(0,true,0);
+      SetSpeed(1,true,0);
       checkIRs();
     }
 }
