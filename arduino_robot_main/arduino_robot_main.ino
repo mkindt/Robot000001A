@@ -674,10 +674,6 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     maxDistanceFromWall = 9; //14;
     minDistanceFromWall = 7; //12.5;
   }
-  else if (southBlockCount == 0) {
-    maxDistanceFromWall = 5.0;
-    minDistanceFromWall = 3.5;
-  } 
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
     maxDistanceFromWall = 26.3;//26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
     minDistanceFromWall = 25.0; //18.5
@@ -690,6 +686,10 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     maxDistanceFromWall = 24.5; //7.25 inches... // was 26.0 for a long time
     minDistanceFromWall = 22.0; // was 23.0 for a long time
   }
+  else if (southBlockCount == 0 && (hardLeftCount - 3)%4 == 0) { //SOUTH WALL COLOR READ
+    maxDistanceFromWall = 5.0;
+    minDistanceFromWall = 3.5;
+  } 
   else if ((hardLeftCount - 3)%4 == 0) { // SOUTH WALL
     maxDistanceFromWall = 19.9; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
     minDistanceFromWall = 17.9; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
