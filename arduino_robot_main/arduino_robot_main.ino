@@ -26,8 +26,15 @@ int S1 = 29;//pinA
 int S2 = 32;//pinE
 int S3 = 31;//pinF
 int out = 30;//pinC
-boolean irstatus;
 int LED = 27;//pinD
+//int S0a = 8;//pinB  don't use this pin
+int S1a = 39;//pinA
+int S2a = 42;//pinE
+int S3a = 41;//pinF
+int outa = 40;//pinC
+int LEDa = 38;//pinD
+// 38 through 42
+boolean irstatus;
 ////////////////// END GRIPPER /////////
 float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.1, 77.5 };//adjusted for center of robot
 float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for center of robot
@@ -71,6 +78,7 @@ void setup() {                                     // Main application entry poi
   pinMode(RXPIN, INPUT);                          // Define the appropriate input/output pins
   pinMode(TXPIN, OUTPUT);
   TCS3200setup(); //color sensors
+  TCS3200setupa(); //color sensors
   pinMode(4, INPUT); // reading front sonar
   pinMode(5, INPUT); // reading rear sonar
   pinMode(6, INPUT); // reading rear right sonar
@@ -198,6 +206,7 @@ void goSouthForBlock() {
             cmRArray[k] = int(cmR); 
           }
           if (medianer (cmRArray) >= (loadingLocR[blockCount] + 9)) */
+          // MAX REAR BEFORE FLAKEY LOW READS FROM POTENTIAL LEFT-BEHIND AIR BLOCK is ~114 //////
             getPerpendicular();
             fineTune(false, loadingLocR[blockCount] + 9.8); //9.8//9.5 was almost perfect
             perfection();
@@ -524,7 +533,8 @@ void readEastColors() {
   else if (cmF < eastLocF[0] && cmR > eastLocR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000)
     topSpeed = 70;
     freeze();
-    delay(600);
+    setColor(int zz);
+    delay(300);
     northCount++;
   }
   else if (cmF < eastLocF[1] && cmR > eastLocR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000)
@@ -575,8 +585,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
-    maxDistanceFromWall = 14;
-    minDistanceFromWall = 12.5;
+    maxDistanceFromWall = 12; //14;
+    minDistanceFromWall = 10.5; //12.5;
   }
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
     maxDistanceFromWall = 26.3;//26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
@@ -596,7 +606,7 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   else  { //delivering east block
     maxDistanceFromWall = 19.9;//19.0; //20; //16.5; //FINAL 20.3 almost perfect
-    minDistanceFromWall = 17.9;//17.0; //17.5; //14; //FINAL 17.5 almost perfect
+    minDistanceFromWall = 18.4;//17.0; //17.5; //14; //FINAL 17.5 almost perfect
   }
   if (SetTopSpeed == 999) { // to soften a hardLeft turn
     topSpeed = 110;
@@ -768,7 +778,7 @@ void freeze() {
 }
 
 void reverse() {
-  SetSpeed(0, true, topSpeed*0.8); //long time was set to 0.7
+  SetSpeed(0, true, topSpeed*0.8 + 2.0); //??? WTF //long time was set to 0.7
   SetSpeed(1, true, topSpeed*0.8);
 }
 void crookedReverse() {
@@ -984,6 +994,11 @@ void color() {
   delay(10);
 }
 
+void setColor(int zz) {
+  eastColorLoc[zz] = detectColor(outa);
+}
+  
+
 int detectColor(int taosOutPin){
   //isPresentTolerance will need to be something small if used in high light environment, large if used in dark environment.
   //the color detection will work either way, but the larger isPresentTolerance is, 
@@ -1136,6 +1151,20 @@ void TCS3200setup() {
   //communication freq output divider
   pinMode(S0,OUTPUT); //S0 pinB
   pinMode(S1,OUTPUT); //S1 pinA 
+  return;
+}
+
+void TCS3200setupa() {
+  //initialize pins
+  pinMode(LEDa,OUTPUT); //LED pinD
+  //color mode selection
+  pinMode(S2a,OUTPUT); //S2 pinE
+  pinMode(S3a,OUTPUT); //s3 pinF
+  //color response pin (only actual input from taos)
+  pinMode(outa, INPUT); //out pinC
+  //communication freq output divider
+  pinMode(S0a,OUTPUT); //S0 pinB
+  pinMode(S1a,OUTPUT); //S1 pinA 
   return;
 }
 ///////////////////////////IR sensors
