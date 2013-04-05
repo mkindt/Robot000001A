@@ -27,7 +27,7 @@ int S2 = 32;//pinE
 int S3 = 31;//pinF
 int out = 30;//pinC
 int LED = 27;//pinD
-//int S0a = 8;//pinB  don't use this pin
+int S0a = 8;//pinB  don't use this pin
 int S1a = 39;//pinA
 int S2a = 42;//pinE
 int S3a = 41;//pinF
@@ -356,6 +356,17 @@ void goEast() {
       Serial.print("error in goEast");
       break;
     case 1: // deliver south block  // NEED TO RECALIBRATE TURN T0 GET THIS BETTER, BATTERY AFFECTING....
+     if (southBlockCount = 0) {
+      // if (cmF > southLocF[0] - 7 || || millis() < timeRef + 200) {
+      // parallelMove(70);
+      // }
+      // else if (cmF <= southLocF[0] - 7) && 
+      //else {
+      //  parallelMove(70);
+      //}
+      southBlockCount++;
+     }
+     else { 
       if (cmF > southLocF[southColorLoc[currentBlockColor]] - 7 || millis() < timeRef + 200) {
         parallelMove(70);
       }
@@ -380,6 +391,7 @@ void goEast() {
         hardLeft(1, 0);
         southBlockCount++;
       }
+     }
       break;
     case 2: //deliver east block
       setCmR();
@@ -597,9 +609,13 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
-    maxDistanceFromWall = 9; //14;
-    minDistanceFromWall = 7.5; //12.5;
+    maxDistanceFromWall = 9.5; //14;
+    minDistanceFromWall = 8; //12.5;
   }
+  else if (southBlockCount == 0) {
+    maxDistanceFromWall = 5.0;
+    minDistanceFromWall = 3.5;
+  } 
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
     maxDistanceFromWall = 26.3;//26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
     minDistanceFromWall = 25.0; //18.5
@@ -1001,7 +1017,7 @@ void lowerarm() {
   }
 }
 void relBlock() {
-    for(pos2 = 120; pos2>=37; pos2-=1) {   // big servo lowers arm
+    for(pos2 = 120; pos2>=30; pos2-=1) {   // big servo lowers arm
     myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
@@ -1014,7 +1030,7 @@ void color() {
 }
 
 void setColor(int zz) {
-  eastColorLoc[detectColor(outa)] = zz;
+  eastColorLoc[detectColora(outa)] = zz;
 }
 
 int detectColor(int taosOutPin){
@@ -1158,6 +1174,149 @@ void taosMode(int mode) {
   }
   return;
 }
+
+int detectColora(int taosOutPin){
+  //isPresentTolerance will need to be something small if used in high light environment, large if used in dark environment.
+  //the color detection will work either way, but the larger isPresentTolerance is, 
+  //the closer the object will need to be in front of sensor
+  double isPresentTolerance = 3;
+  double isPresent = colorReada(taosOutPin,0,0)/colorRead(taosOutPin,0,1);//number gets large when something is in front of sensor. 
+  //Serial.print("isPresent:");
+  //Serial.println(isPresent,2);
+  //Serial.print("isPresentTolerance currently set to:");
+  //Serial.println(isPresentTolerance,2);
+  if(isPresent < isPresentTolerance) {
+    Serial.println("nothing is in front of sensor");
+    return 0;
+  }
+  double red,blue,green;
+  double white = colorReada(taosOutPin,0,1);
+  red = white/colorReada(taosOutPin,1,1)*255;
+  blue = white/colorReada(taosOutPin,2,1)*255;
+  green = white/colorReada(taosOutPin,3,1)*255;
+  dPrint("red is ", red);
+//  Serial.println(red);
+dPrint("blue is ", blue);
+//  Serial.println(blue);
+dPrint("green is ", green);
+//  Serial.println(green);
+// blue: R36 B159 G81
+if (red > 155 && red < 218 && blue > 48 && blue < 75 && green > 30 && green < 55) {
+    Serial.println("Red Detected");
+    return 0;
+  }
+
+ else if (red > 175 && red < 220 && blue > 36 && blue < 48 && green > 43 && green < 54) {
+    Serial.println("Orange Detected");
+    return 1;
+  }
+
+ else if (red > 65 && red < 93 && blue > 80 && blue < 105 && green > 80 && green < 120) {
+    Serial.println("Green Detected");
+    return 3;
+  }
+
+ else if (red > 118 && red < 145 && blue > 65 && blue < 90 && green > 59 && green < 85) {
+    Serial.println("Brown Detected");
+    return 5;
+  }
+
+ else if (red > 20 && red < 45 && blue > 150 && blue < 170 && green > 70 && green < 90) {
+    Serial.println("Blue Detected");
+    return 4;
+  }
+
+ else if (red > 115 && red < 155 && blue > 40 && blue < 60 && green > 80 && green < 100) {
+    Serial.println("Yellow Detected");
+    return 2;
+  }
+  else {
+    return 999; //TROUBLESHOOTING NUMBER
+  }
+}
+/*
+This method will return the pulseIn reading of the selected color.
+ Since frequency is proportional to light intensity of the selected color filter, 
+ the smaller pulseIn is, the more light there is of the selected color filter.  
+ It will turn on the sensor at the start taosMode(1), and it will power off the sensor at the end taosMode(0)
+ color: 0=white, 1=red, 2=blue, 3=green
+ if LEDstate is 0, LED will be off. 1 and the LED will be on.
+ taosOutPin is the ouput of the TCS3200. If you have multiple TCS3200, all wires can be combined except the out pin
+ */
+double colorReada(int taosOutPin, int color, boolean LEDstate) {
+  //make sure that the pin is set to input
+  pinMode(taosOutPin, INPUT);
+  //turn on sensor with highest frequency settingtaosMode(1);
+  //delay to let the sensor sit before taking a reading. Should be very small with this sensor
+  int sensorDelay = 1;
+  //set the pins to select the color  
+  if(color == 0) {//white
+    digitalWrite(S3a, LOW); //S3
+    digitalWrite(S2a, HIGH); //S2
+    // Serial.print(" w");
+  }
+  else if(color == 1) {//red
+    digitalWrite(S3a, LOW); //S3
+    digitalWrite(S2a, LOW); //S2
+    // Serial.print(" r");
+  }
+  else if(color == 2) {//blue
+    digitalWrite(S3, HIGH); //S3
+    digitalWrite(S2, LOW); //S2 
+    // Serial.print(" b");
+  }
+  else if(color == 3) {//green
+    digitalWrite(S3, HIGH); //S3
+    digitalWrite(S2, HIGH); //S2 
+    // Serial.print(" g");
+  }
+  double readPulse;
+  if(LEDstate == 0) {
+    digitalWrite(LEDa, LOW);
+  }
+  if(LEDstate == 1) {
+    digitalWrite(LEDa, HIGH);
+  }
+  delay(sensorDelay);
+  readPulse = pulseIn(taosOutPin, LOW, 80000);
+  //if the pulseIn times out, it returns 0 and that throws off numbers. just cap it at 80k if it happens
+  if(readPulse < .1) {
+    readPulse = 80000;
+  }
+  //turn off color sensor and white LED to save power 
+  taosModea(0);
+  return readPulse;
+}
+//setting mode to zero will put taos into low power mode. taosMode(0);
+void taosModea(int mode) {
+  if(mode == 0){
+    //power OFF
+    digitalWrite(LEDa, LOW);
+    digitalWrite(S0a, LOW); //S0
+    digitalWrite(S1a, LOW); //S1
+    //  Serial.println("mOFFm");
+  }
+  else if(mode == 1) {
+    //this will put in 1:1
+    digitalWrite(S0a, HIGH); //S0
+    digitalWrite(S1a, HIGH); //S1
+    // Serial.println("m1:1m");
+  }
+  else if(mode == 2) {
+    //this will put in 1:5
+    digitalWrite(S0a, HIGH); //S0
+    digitalWrite(S1a, LOW); //S1
+    //Serial.println("m1:5m");
+  }
+  else if(mode == 3) {
+    //this will put in 1:50
+    digitalWrite(S0a, LOW); //S0
+    digitalWrite(S1a, HIGH); //S1 
+    //Serial.println("m1:50m");
+  }
+  return;
+}
+
 void TCS3200setup() {
   //initialize pins
   pinMode(LED,OUTPUT); //LED pinD
