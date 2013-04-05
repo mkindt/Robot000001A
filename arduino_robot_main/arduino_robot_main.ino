@@ -40,12 +40,12 @@ float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.1, 77.5 };//adjusted for cent
 float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for center of robot
 float eastLocR[] = { 107.0, 114.6, 122.2, 129.9, 137.5, 145.1 };
 //float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
-// int eastColorLoc[] = { 0, 0, 0, 0, 0, 0 };
+int eastColorLoc[] = { 10, 10, 10, 10, 10, 10 };
 // int southColorLoc[] = { 0, 0, 0, 0, 0, 0 }; 
 // colors below will be measured and recorded in first passes unless we have access to competition boards
 // colorLoc indexes eastLocF and eastLocR: i.e. eastLocF[colorLoc[RED]]
 // char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
-int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 }; 
+//int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 }; 
 int southColorLoc[] = { 2, 3, 0, 4, 1, 5 };
 float loadingLoc[] = { 138.11, 130.5, 122.87, 115.25, 107.63, 100.01, 92.39, 84.77, 77.15, 69.53, 61.91, 54.29, 46.67, 39.05, 0, 0};
 float loadingLocR[] = { 23.1, 30.71, 38.32, 45.93, 53.54, 61.15, 68.76, 76.37 };
@@ -566,6 +566,12 @@ void readEastColors() {
     freeze();
     setColor(5);
     delay(200);
+    dPrint("the location set for red ", eastColorLoc[0]);
+    dPrint("the location set for orange ", eastColorLoc[1]);
+    dPrint("the location set for yellow ", eastColorLoc[2]);
+    dPrint("the location set for green ", eastColorLoc[3]);
+    dPrint("the location set for blue ", eastColorLoc[4]);
+    dPrint("the location set for brown ", eastColorLoc[5]);
     northCount++;
     fineTune(false, 135);
     getPerpendicular();
@@ -1029,7 +1035,7 @@ dPrint("blue is ", blue);
 dPrint("green is ", green);
 //  Serial.println(green);
 // blue: R36 B159 G81
-if (red > 175 && red < 218 && blue > 48 && blue < 62 && green > 30 && green < 43) {
+if (red > 155 && red < 218 && blue > 48 && blue < 75 && green > 30 && green < 55) {
     Serial.println("Red Detected");
     return 0;
   }
@@ -1039,12 +1045,12 @@ if (red > 175 && red < 218 && blue > 48 && blue < 62 && green > 30 && green < 43
     return 1;
   }
 
- else if (red > 65 && red < 93 && blue > 80 && blue < 100 && green > 90 && green < 120) {
+ else if (red > 65 && red < 93 && blue > 80 && blue < 105 && green > 80 && green < 120) {
     Serial.println("Green Detected");
     return 3;
   }
 
- else if (red > 118 && red < 145 && blue > 65 && blue < 83 && green > 59 && green < 75) {
+ else if (red > 118 && red < 145 && blue > 65 && blue < 90 && green > 59 && green < 85) {
     Serial.println("Brown Detected");
     return 5;
   }
