@@ -457,7 +457,8 @@ void pickUpBlock() {
     myservo1.attach(9);
     myservo2.attach(8);
     myservo1.write(153);
-    lowerarm();           // Lower the arm to the block 
+    lowerarm(); 
+    checkIRs();    // Lower the arm to the block 
     closesmallservo();      //  Close gripper
     delay(100);
     if (blockSize == 333) {
@@ -513,8 +514,6 @@ void pickUpBlock() {
 void dropOffBlock() {
   freeze();
   
-  //TODO: implement IR here
-  checkIRs();
   
   
     
@@ -1020,6 +1019,7 @@ void lowerarm() {
   for(pos2 = 120; pos2>=12; pos2-=1) {   // big servo lowers arm
     myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
+    
   }
 }
 void relBlock() {
@@ -1357,22 +1357,27 @@ void TCS3200setupa() {
 void checkIRs() {
   //Checks the IRs at the pickup area to see if the bot is in place to pick up 
   //a block
+  int irCounter = 0;
     if ((digitalRead(irPin1) != 1) && (digitalRead(irPin2) != 1))   {
     debugPrintLn("Slightly moving back");
+    irCounter++;
     
     slightBackup();
   }
   else if (digitalRead(irPin1) != 1) {
     debugPrintLn("Slightly moving forward");
+    irCounter++;
     slightForward();
   }
   else if (digitalRead(irPin2) != 1) {
     slightBackup();
+    irCounter++
   }else{
   debugPrintLn("no move needed.");
   irstatus = true;
-  delay(1000);
-}
+  delay(500);
+}else if(irCounter >= 3){
+  debugPrintLn("IR ERROR. We tried to adjust too many times and didn't get it right");
 }
 
 void slightBackup()  {
