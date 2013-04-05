@@ -1261,13 +1261,13 @@ double colorReada(int taosOutPin, int color, boolean LEDstate) {
     // Serial.print(" r");
   }
   else if(color == 2) {//blue
-    digitalWrite(S3, HIGH); //S3
-    digitalWrite(S2, LOW); //S2 
+    digitalWrite(S3a, HIGH); //S3
+    digitalWrite(S2a, LOW); //S2 
     // Serial.print(" b");
   }
   else if(color == 3) {//green
-    digitalWrite(S3, HIGH); //S3
-    digitalWrite(S2, HIGH); //S2 
+    digitalWrite(S3a, HIGH); //S3
+    digitalWrite(S2a, HIGH); //S2 
     // Serial.print(" g");
   }
   double readPulse;
