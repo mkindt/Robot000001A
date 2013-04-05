@@ -134,7 +134,7 @@ void loop() {
   }
   if (start == 2) {
     if (millis() > timeRef + 500) {
-      topSpeed = 120;
+      topSpeed = 70; //120;
       start = 3;
       debugPrint("");
       debugPrint("HI ");
@@ -356,11 +356,46 @@ void goEast() {
       Serial.print("error in goEast");
       break;
     case 1: // deliver south block  // NEED TO RECALIBRATE TURN T0 GET THIS BETTER, BATTERY AFFECTING....
-     if (southBlockCount = 0) {
+     if (southBlockCount == 0) {
       // if (cmF > southLocF[0] - 7 || || millis() < timeRef + 200) {
       // parallelMove(70);
       // }
-      // else if (cmF <= southLocF[0] - 7) && 
+      // else if (cmF <= southLocF[0] - 7) && southCount == 0){
+      //  freeze();
+      //  setSouthColor(0);
+      //  delay(300);
+      //  southCount++;
+      // }
+            // else if (cmF <= southLocF[1] - 7) && southCount == 1){
+      //  freeze();
+      //  setSouthColor(0);
+      //  delay(300);
+            //  southCount++;
+      // }
+            // else if (cmF <= southLocF[2] - 7) && southCount == 2){
+      //  freeze();
+      //  setSouthColor(0);
+      //  delay(300);
+            //  southCount++;
+      // }
+            // else if (cmF <= southLocF[3] - 7) && southCount == 3){
+      //  freeze();
+      //  setSouthColor(0);
+      //  delay(300);
+            //  southCount++;
+      // }
+            // else if (cmF <= southLocF[4] - 7) && southCount == 4){
+      //  freeze();
+      //  setSouthColor(0);
+      //  delay(300);
+            //  southCount++;
+      // }
+            // else if (cmF <= southLocF[5] - 7) && southCount == 5){
+      //  freeze();
+      //  setSouthColor(0);
+      //  delay(300);
+            //  southCount++;
+      // }
       //else {
       //  parallelMove(70);
       //}
@@ -538,10 +573,10 @@ void readEastColors() {
   }
   // north motion -- not getting zero sometimes
   if (cmF > eastLocF[0]+20 && northCount == 0){
-    parallelMove(120);
+    parallelMove(70);
   }
   else if (cmF > eastLocF[0]+10 && northCount == 0 && millis() > timeRef + 1100) {
-    parallelMove(90);
+    parallelMove(70);
   }
   else if (cmF < eastLocF[0] && cmR > eastLocR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref + 200 && millis() > timeRef + 1300) { // < 8000)
     topSpeed = 70;
@@ -595,7 +630,7 @@ void readEastColors() {
     freeze(); */
   }
   else{
-    parallelMove(80);
+    parallelMove(70);
     //QTIref = RCTime(11);
     //QTIref = (QTIref + RCTime(11))/2 ;
   }
