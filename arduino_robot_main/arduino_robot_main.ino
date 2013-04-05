@@ -356,7 +356,7 @@ void goEast() {
       Serial.print("error in goEast");
       break;
     case 1: // deliver south block  // NEED TO RECALIBRATE TURN T0 GET THIS BETTER, BATTERY AFFECTING....
-     if (southBlockCount == 0) {
+     if (southBlockCount == 0) { // read the colors first
       // if (cmF > southLocF[0] - 7 || || millis() < timeRef + 200) {
       // parallelMove(70);
       // }
@@ -395,11 +395,15 @@ void goEast() {
       //  setSouthColor(0);
       //  delay(300);
             //  southCount++;
+      // crookedReverse();
+       // delay(800);
+       // getPerpendicular();
+       // southBlockCount++;
+       //
       // }
       //else {
       //  parallelMove(70);
       //}
-      southBlockCount++;
      }
      else { 
       if (cmF > southLocF[southColorLoc[currentBlockColor]] - 7 || millis() < timeRef + 200) {
@@ -561,57 +565,61 @@ void dropOffBlock() {
 }
 ////READEAST ////////////////////////////////////////////////////////////////////////
 void readEastColors() {
-  if (cmF < 24){
-    hardLeft(1, 0);
-  }
-  if (cmF > 140){
-    northCount = 0;
-  }
+  setCmRR();
   if (cmF < 92 && northCount > 5){  //originally <85
     hardLeft(1, 0);
     northCount = 0;
   }
-  // north motion -- not getting zero sometimes
-  if (cmF > eastLocF[0]+20 && northCount == 0){
-    parallelMove(70);
-  }
-  else if (cmF > eastLocF[0]+10 && northCount == 0 && millis() > timeRef + 1100) {
-    parallelMove(70);
-  }
-  else if (cmF < eastLocF[0] && cmR > eastLocR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref + 200 && millis() > timeRef + 1300) { // < 8000)
-    topSpeed = 70;
+  if (cmF <= 130 && cmRR > eastLocR[0] - 6 && northCount == 0 && millis() > timeRef + 1100) {
+    getPerpendicular();
+    fineTune(0, eastLocR[0] - 0.0);
+    getPerpendicular();
     freeze();
     setColor(0);
-    delay(300);
+    delay(200);
     northCount++;
   }
-  else if (cmF < eastLocF[1] && cmR > eastLocR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref + 200) { // < 8000)
-    //topSpeed = 80;
-    freeze();
+  else if (cmRR > eastLocR[1] - 6 && northCount == 1) {
+    getPerpendicular();
+    fineTune(0, eastLocR[0] - 0.0);
+    getPerpendicular();
+        freeze();
     setColor(1);
-    delay(300);
+    delay(200);
     northCount++;
   }
-  else if (cmF < eastLocF[2] && cmR > eastLocR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref + 200) { // < 8000)
-    freeze();
+  else if (cmRR > eastLocR[2] - 6 && northCount == 2) {
+    getPerpendicular();
+    fineTune(0, eastLocR[0] - 0.0);
+    getPerpendicular();
+        freeze();
     setColor(2);
-    delay(300);
+    delay(200);
     northCount++;
   }
-  else if (cmF < eastLocF[3] && cmR > eastLocR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref + 200) { // < 8000)
-    freeze();
+  else if (cmRR > eastLocR[3] - 6 && northCount == 3) {
+    getPerpendicular();
+    fineTune(0, eastLocR[0] - 0.0);
+    getPerpendicular();
+        freeze();
     setColor(3);
-    delay(300);
+    delay(200);
     northCount++;
   }
-  else if (cmF < eastLocF[4] && cmR > eastLocR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref + 200) { // < 8000)
-    freeze();
+  else if (cmRR > eastLocR[4] - 6 && northCount == 4) {
+    getPerpendicular();
+    fineTune(0, eastLocR[0] - 0.0);
+    getPerpendicular();
+        freeze();
     setColor(4);
-    delay(300);
+    delay(200);
     northCount++;
   }
-  else if (cmF < eastLocF[5] && cmR > eastLocR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref + 200) { // < 8000)
-    freeze();
+  else if (cmRR > eastLocR[5] - 6 && northCount == 5) {
+    getPerpendicular();
+    fineTune(0, eastLocR[0] - 0.0);
+    getPerpendicular();
+        freeze();
     setColor(5);
     delay(200);
     dPrint("the location set for red ", eastColorLoc[0]);
@@ -621,6 +629,9 @@ void readEastColors() {
     dPrint("the location set for blue ", eastColorLoc[4]);
     dPrint("the location set for brown ", eastColorLoc[5]);
     northCount++;
+    crookedReverse();
+    delay(800);
+    getPerpendicular();
     fineTune(false, 135);
     getPerpendicular();
     /* timeRef = millis();
@@ -644,8 +655,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
-    maxDistanceFromWall = 9.5; //14;
-    minDistanceFromWall = 8; //12.5;
+    maxDistanceFromWall = 9; //14;
+    minDistanceFromWall = 7; //12.5;
   }
   else if (southBlockCount == 0) {
     maxDistanceFromWall = 5.0;
@@ -1215,7 +1226,7 @@ int detectColora(int taosOutPin){
   //the color detection will work either way, but the larger isPresentTolerance is, 
   //the closer the object will need to be in front of sensor
   double isPresentTolerance = 3;
-  double isPresent = colorReada(taosOutPin,0,0)/colorRead(taosOutPin,0,1);//number gets large when something is in front of sensor. 
+  double isPresent = colorReada(taosOutPin,0,0)/colorReada(taosOutPin,0,1);//number gets large when something is in front of sensor. 
   //Serial.print("isPresent:");
   //Serial.println(isPresent,2);
   //Serial.print("isPresentTolerance currently set to:");
