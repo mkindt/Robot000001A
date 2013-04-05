@@ -33,6 +33,7 @@ int S2a = 42;//pinE
 int S3a = 41;//pinF
 int outa = 40;//pinC
 int LEDa = 38;//pinD
+int irDelay = 100; //IR delay between checks in ms
 // 38 through 42
 boolean irstatus;
 ////////////////// END GRIPPER /////////
@@ -1375,7 +1376,7 @@ void checkIRs() {
   }else{
   debugPrintLn("no move needed.");
   irstatus = true;
-  delay(500);
+  delay(irDelay);
 }else if(irCounter >= 3){
   debugPrintLn("IR ERROR. We tried to adjust too many times and didn't get it right");
 }
@@ -1390,7 +1391,7 @@ void slightBackup()  {
    SetSpeed(0,false, int(60*0.96));
    SetSpeed(0,false,60);
    //delay before check again
-   delay(500);
+   delay(irDelay);
    SetSpeed(0,false,0);
    SetrSpeed(1,false,0);
    checkIRs();
@@ -1404,7 +1405,7 @@ void slightForward()  {
       SetSpeed(0,true, int(60*0.96));
       SetSpeed(1,true,60);
       //delay before check again
-      delay(500);
+      delay(irDelay);
       SetSpeed(0,true,0);
       SetSpeed(1,true,0);
       checkIRs();
