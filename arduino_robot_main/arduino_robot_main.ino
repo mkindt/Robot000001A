@@ -112,6 +112,7 @@ void loop() {
   if (start == 0) { //startup calibration for sonars
     debugPrint("");
     debugPrint("test ");
+    QTIref = RCTime(11); 
   myservo2.attach(8);
   for (pos2 = 100; pos2 < 120; pos2++) {
     myservo2.write(pos2);
@@ -501,7 +502,7 @@ void dropOffBlock() {
   freeze();
     myservo1.attach(9);
     myservo2.attach(8);
-    lowerarm();            // Lower the gripper arm
+    relBlock(); //lowerarm();            // Lower the gripper arm
     opensmallservo();      // Release block
     delay(200);
     liftarm();            // Raise the gripper arm out of the way
@@ -530,39 +531,39 @@ void readEastColors() {
   else if (cmF > eastLocF[0]+10 && northCount == 0 && millis() > timeRef + 1100) {
     parallelMove(90);
   }
-  else if (cmF < eastLocF[0] && cmR > eastLocR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref && millis() > timeRef + 1300) { // < 8000)
+  else if (cmF < eastLocF[0] && cmR > eastLocR[0]-10.0 && northCount == 0 && RCTime(11) < QTIref + 200 && millis() > timeRef + 1300) { // < 8000)
     topSpeed = 70;
     freeze();
     setColor(0);
     delay(300);
     northCount++;
   }
-  else if (cmF < eastLocF[1] && cmR > eastLocR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[1] && cmR > eastLocR[1]-10.0 && northCount == 1 && RCTime(11) < QTIref + 200) { // < 8000)
     //topSpeed = 80;
     freeze();
     setColor(1);
     delay(300);
     northCount++;
   }
-  else if (cmF < eastLocF[2] && cmR > eastLocR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[2] && cmR > eastLocR[2]-10.0 && northCount == 2 && RCTime(11) < QTIref + 200) { // < 8000)
     freeze();
     setColor(2);
     delay(300);
     northCount++;
   }
-  else if (cmF < eastLocF[3] && cmR > eastLocR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[3] && cmR > eastLocR[3]-10.0 && northCount == 3 && RCTime(11) < QTIref + 200) { // < 8000)
     freeze();
     setColor(3);
     delay(300);
     northCount++;
   }
-  else if (cmF < eastLocF[4] && cmR > eastLocR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[4] && cmR > eastLocR[4]-10.0 && northCount == 4 && RCTime(11) < QTIref + 200) { // < 8000)
     freeze();
     setColor(4);
     delay(300);
     northCount++;
   }
-  else if (cmF < eastLocF[5] && cmR > eastLocR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref) { // < 8000)
+  else if (cmF < eastLocF[5] && cmR > eastLocR[5]-10.0 && northCount == 5 && RCTime(11) < QTIref + 200) { // < 8000)
     freeze();
     setColor(5);
     delay(200);
@@ -596,8 +597,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
-    maxDistanceFromWall = 12; //14;
-    minDistanceFromWall = 10.5; //12.5;
+    maxDistanceFromWall = 9; //14;
+    minDistanceFromWall = 7.5; //12.5;
   }
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
     maxDistanceFromWall = 26.3;//26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
@@ -987,7 +988,7 @@ void closesmallservo() {
 }
 
 void liftarm() {
- for(pos2 = 12; pos2 < 120; pos2 += 1) { // big servo lifts arm in steps of 1 degree
+ for(pos2; pos2 < 120; pos2 += 1) { // big servo lifts arm in steps of 1 degree
     myservo2.write(pos2);              // tell big servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
@@ -999,6 +1000,13 @@ void lowerarm() {
     delay(15);                       // waits 15ms for the servo to reach the position
   }
 }
+void relBlock() {
+    for(pos2 = 120; pos2>=37; pos2-=1) {   // big servo lowers arm
+    myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+}
+
 
 void color() {
   currentBlockColor = detectColor(out);
