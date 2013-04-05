@@ -586,55 +586,55 @@ void readEastColors() {
     hardLeft(1, 0);
     northCount = 0;
   }
-  if (cmF <= 130 && cmRR > eastLocR[0] - 6 && northCount == 0 && millis() > timeRef + 1100) {
-    getPerpendicular();
-    fineTune(0, eastLocR[0] - 0.0);
-    getPerpendicular();
+  if (cmF <= 130 && cmRR > eastLocR[0] - 2 && northCount == 0 && millis() > timeRef + 1100) {
+    //getPerpendicular();
+    //fineTune(0, eastLocR[0] - 0.0);
+    //getPerpendicular();
     freeze();
     setColor(0);
     delay(200);
     northCount++;
   }
-  else if (cmRR > eastLocR[1] - 6 && northCount == 1) {
-    getPerpendicular();
-    fineTune(0, eastLocR[0] - 0.0);
-    getPerpendicular();
+  else if (cmRR > eastLocR[1] - 2 && northCount == 1) {
+    //getPerpendicular();
+    //fineTune(0, eastLocR[0] - 0.0);
+    //getPerpendicular();
         freeze();
     setColor(1);
     delay(200);
     northCount++;
   }
-  else if (cmRR > eastLocR[2] - 6 && northCount == 2) {
-    getPerpendicular();
-    fineTune(0, eastLocR[0] - 0.0);
-    getPerpendicular();
+  else if (cmRR > eastLocR[2] - 2 && northCount == 2) {
+    //getPerpendicular();
+    //fineTune(0, eastLocR[0] - 0.0);
+    //getPerpendicular();
         freeze();
     setColor(2);
     delay(200);
     northCount++;
   }
-  else if (cmRR > eastLocR[3] - 6 && northCount == 3) {
-    getPerpendicular();
-    fineTune(0, eastLocR[0] - 0.0);
-    getPerpendicular();
+  else if (cmRR > eastLocR[3] - 2 && northCount == 3) {
+    //getPerpendicular();
+    //fineTune(0, eastLocR[0] - 0.0);
+    //getPerpendicular();
         freeze();
     setColor(3);
     delay(200);
     northCount++;
   }
-  else if (cmRR > eastLocR[4] - 6 && northCount == 4) {
-    getPerpendicular();
-    fineTune(0, eastLocR[0] - 0.0);
-    getPerpendicular();
+  else if (cmRR > eastLocR[4] - 2 && northCount == 4) {
+    //getPerpendicular();
+    //fineTune(0, eastLocR[0] - 0.0);
+    //getPerpendicular();
         freeze();
     setColor(4);
     delay(200);
     northCount++;
   }
-  else if (cmRR > eastLocR[5] - 6 && northCount == 5) {
-    getPerpendicular();
-    fineTune(0, eastLocR[0] - 0.0);
-    getPerpendicular();
+  else if (cmRR > eastLocR[5] - 2 && northCount == 5) {
+    //getPerpendicular();
+    //fineTune(0, eastLocR[0] - 0.0);
+    //getPerpendicular();
         freeze();
     setColor(5);
     delay(200);
@@ -646,7 +646,9 @@ void readEastColors() {
     dPrint("the location set for brown ", eastColorLoc[5]);
     northCount++;
     crookedReverse();
-    delay(800);
+    delay(700);
+    reverse();
+    delay(600);
     getPerpendicular();
     fineTune(false, 135);
     getPerpendicular();
@@ -671,7 +673,7 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
-    maxDistanceFromWall = 9; //14;
+    maxDistanceFromWall = 8.5; //14;
     minDistanceFromWall = 7; //12.5;
   }
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
@@ -705,18 +707,18 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   } 
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
-  if (distAveSideFront > 50) {
+  if (distAveSideFront > 80) {
     pingWall(3);
   }
-  if (distAveSideRear > 50) {
+  if (distAveSideRear > 80) {
     pingWall(2);
   }
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
-  if (distAveSideFront > maxDistanceFromWall && distAveSideRear - distAveSideFront > 1 ){// 20 AND 7 originally
+  if (distAveSideFront > maxDistanceFromWall && distAveSideRear - distAveSideFront > 1.5 ){// 20 AND 7 originally
     straight(); //if already turned, don't turn more
   }
-  else if (distAveSideFront < minDistanceFromWall && distAveSideFront - distAveSideRear > 1 ){ // 18 AND 7 originally
+  else if (distAveSideFront < minDistanceFromWall && distAveSideFront - distAveSideRear > 1.5 ){ // 18 AND 7 originally
     straight(); //if already turned, don't turn more
   }
   else if (distAveSideFront > maxDistanceFromWall ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
