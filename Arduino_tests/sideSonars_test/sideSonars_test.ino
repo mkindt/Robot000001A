@@ -28,7 +28,7 @@ void loop(){
     dPrint("side front is ", distAveSideFront);
     //Serial.print(distAveSideFront);
     Serial.print(" ");
-    dPrint("side front is ", distAveSideRear);
+    dPrint("                side rear is ", distAveSideRear);
     Serial.print(distAveSideRear);
     Serial.print(" ");
     Serial.println();
