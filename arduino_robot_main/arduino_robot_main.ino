@@ -570,7 +570,11 @@ void dropOffBlock() {
   // delay(1000);
 }
 
-
+void copyArray(int* xx, int* yy) {
+  for (int k = 0; k < 6; k++) {
+    xx[k] = yy[k];
+  }
+}
 ////READEAST ////////////////////////////////////////////////////////////////////////
 void readEastColors() {
   setCmRR();
@@ -585,16 +589,16 @@ void readEastColors() {
     freeze();
     int colorRef = setColor(0);
     if (colorRef == eastColorSet1[0]) {
-      //eastColorLoc = eastColorSet1;
+      copyArray(eastColorLoc, eastColorSet1);
     }
     else if (colorRef == eastColorSet2[0]) {
-      //eastColorLoc = eastColorSet2;
+      copyArray(eastColorLoc, eastColorSet2);
     }
     else if (colorRef == eastColorSet3[0]) {
-      //eastColorLoc = eastColorSet3;
+      copyArray(eastColorLoc, eastColorSet3);
     }
     else if (colorRef == eastColorSet4[0]) {
-      //eastColorLoc = eastColorSet4;
+      copyArray(eastColorLoc, eastColorSet4);
     }
     delay(200);
     northCount++;
