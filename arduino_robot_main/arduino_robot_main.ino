@@ -41,17 +41,21 @@ float eastLocF[] = { 115.6, 108.0, 100.4, 92.8, 85.1, 77.5 };//adjusted for cent
 float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for center of robot
 float eastLocR[] = { 107.0, 114.6, 122.2, 129.9, 137.5, 145.1 };
 //float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
-int eastColorLoc[] = { 10, 10, 10, 10, 10, 10 };
-int eastColorSet1[] = { 1, 2, 0, 3, 4, 5 };
-int eastColorSet2[] = { 2, 3, 1, 5, 0, 4 };
-int eastColorSet3[] = { 3, 4, 0, 2, 5, 1 };
-int eastColorSet4[] = { 1, 3, 2, 4, 5, 0 };
+int eastColorSet1[] = { 4, 1, 5, 0, 2, 3 }; //good
+int eastColorSet2[] = { 2, 0, 4, 3, 1, 5 }; //good
+int eastColorSet3[] = { 3, 2, 1, 4, 0, 5 }; //good
+int eastColorSet4[] = { 0, 5, 2, 1, 3, 4 }; //good
+int southColorSet1[] = { 1, 2, 0, 3, 4, 5 }; //good
+int southColorSet2[] = { 2, 3, 1, 5, 0, 4 }; //good
+int southColorSet3[] = { 2, 5, 3, 0, 1, 4 }; //good
+int southColorSet4[] = { 5, 0, 2, 1, 3, 4 }; //good
 // int southColorLoc[] = { 0, 0, 0, 0, 0, 0 }; 
 // colors below will be measured and recorded in first passes unless we have access to competition boards
 // colorLoc indexes eastLocF and eastLocR: i.e. eastLocF[colorLoc[RED]]
 // char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
-//int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 }; 
-int southColorLoc[] = { 2, 3, 0, 4, 1, 5 };
+//int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 };
+int eastColorLoc[] = { 0, 1, 2, 3, 4, 5 };
+int southColorLoc[] = { 0, 1, 2, 3, 4, 5 };
 float loadingLoc[] = { 138.11, 130.5, 122.87, 115.25, 107.63, 100.01, 92.39, 84.77, 77.15, 69.53, 61.91, 54.29, 46.67, 39.05, 0, 0};
 float loadingLocR[] = { 23.1, 30.71, 38.32, 45.93, 53.54, 61.15, 68.76, 76.37 };
 int blockCount = 0; //tracks number of blocks picked up / delivered
@@ -572,7 +576,9 @@ void dropOffBlock() {
 
 void copyArray(int* xx, int* yy) {
   for (int k = 0; k < 6; k++) {
+    dPrint("the value of yy, the array we need ", yy[k]);
     xx[k] = yy[k];
+    dPrint("the value of xx, the array we want to copy to ", xx[k]);
   }
 }
 ////READEAST ////////////////////////////////////////////////////////////////////////
@@ -588,17 +594,22 @@ void readEastColors() {
     //getPerpendicular();
     freeze();
     int colorRef = setColor(0);
+    dPrint("colorRef is this color: ", colorRef);
     if (colorRef == eastColorSet1[0]) {
       copyArray(eastColorLoc, eastColorSet1);
+      copyArray(southColorLoc, southColorSet1);
     }
     else if (colorRef == eastColorSet2[0]) {
       copyArray(eastColorLoc, eastColorSet2);
+      copyArray(southColorLoc, southColorSet2);
     }
     else if (colorRef == eastColorSet3[0]) {
       copyArray(eastColorLoc, eastColorSet3);
+      copyArray(southColorLoc, southColorSet3);
     }
     else if (colorRef == eastColorSet4[0]) {
       copyArray(eastColorLoc, eastColorSet4);
+      copyArray(southColorLoc, southColorSet4);
     }
     delay(200);
     northCount++;
@@ -655,11 +666,13 @@ void readEastColors() {
     northCount++;
     topSpeed = 90;
     left();
-    delay(1000);
+    delay(400); //300
+    straight();
+    delay(400); //500
     getPerpendicular();
     //fineTune(false, 135);
     setCmRR();
-    while (cmRR < 133) {
+    while (cmRR < 130) {
       straight();
       setCmRR();
     }  
@@ -686,8 +699,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   int maxDistanceFromWall, minDistanceFromWall;
   if (hardLeftCount == 0) {
-    maxDistanceFromWall = 8.5; //14;
-    minDistanceFromWall = 7; //12.5;
+    maxDistanceFromWall = 9.5; //14;
+    minDistanceFromWall = 8; //12.5;
   }
   else if ((hardLeftCount - 2)%4 == 0 && blockSize > 0) { // going south with block (need rear reading)
     maxDistanceFromWall = 26.3;//26; // 24.5; //21 //7.25 inches... // also need cushion for turn to east wall
