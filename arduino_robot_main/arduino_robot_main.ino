@@ -356,7 +356,7 @@ void goEast() {
       Serial.print("error in goEast");
       break;
     case 1: // deliver south block  // NEED TO RECALIBRATE TURN T0 GET THIS BETTER, BATTERY AFFECTING....
-     if (southBlockCount == 0) { // read the colors first
+     // if (southBlockCount == 0) { // read the colors first
       // if (cmF > southLocF[0] - 7 || || millis() < timeRef + 200) {
       // parallelMove(70);
       // }
@@ -404,8 +404,8 @@ void goEast() {
       //else {
       //  parallelMove(70);
       //}
-     }
-     else { 
+     // }
+     //else { 
       if (cmF > southLocF[southColorLoc[currentBlockColor]] - 7 || millis() < timeRef + 200) {
         parallelMove(70);
       }
@@ -430,7 +430,7 @@ void goEast() {
         hardLeft(1, 0);
         southBlockCount++;
       }
-     }
+     // }
       break;
     case 2: //deliver east block
       setCmR();
@@ -575,7 +575,19 @@ void readEastColors() {
     //fineTune(0, eastLocR[0] - 0.0);
     //getPerpendicular();
     freeze();
-    setColor(0);
+    int colorRef = setColor(0);
+    if (colorRef == southColorSet1[0]) {
+      eastColorLoc = southColorSet1;
+    }
+    else if (colorRef == southColorSet2[0]) {
+      eastColorLoc = southColorSet2;
+    }
+    else if (colorRef == southColorSet3[0]) {
+      eastColorLoc = southColorSet3;
+    }
+    else if (colorRef == southColorSet4[0]) {
+      eastColorLoc = southColorSet4;
+    }
     delay(200);
     northCount++;
   }
@@ -596,7 +608,7 @@ void readEastColors() {
     setColor(2);
     delay(200);
     northCount++;
-  }
+  /*}
   else if (cmRR > eastLocR[3] - 2 && northCount == 3) {
     //getPerpendicular();
     //fineTune(0, eastLocR[0] - 0.0);
@@ -621,7 +633,7 @@ void readEastColors() {
     //getPerpendicular();
         freeze();
     setColor(5);
-    delay(200);
+    delay(200); */
     dPrint("the location set for red ", eastColorLoc[0]);
     dPrint("the location set for orange ", eastColorLoc[1]);
     dPrint("the location set for yellow ", eastColorLoc[2]);
@@ -629,13 +641,18 @@ void readEastColors() {
     dPrint("the location set for blue ", eastColorLoc[4]);
     dPrint("the location set for brown ", eastColorLoc[5]);
     northCount++;
-    crookedReverse();
+    topSpeed = 80;
+    right();
     delay(700);
-    reverse();
-    delay(600);
     getPerpendicular();
-    fineTune(false, 135);
+    //fineTune(false, 135);
+    setCmRR();
+    while (cmRR < 133) {
+      straight();
+      setCmRR();
+    }  
     getPerpendicular();
+    hardLeft(1, 0);
     /* timeRef = millis();
     while (millis() - timeRef < 1300) {
       reverse();
@@ -672,10 +689,10 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
     maxDistanceFromWall = 24.5; //7.25 inches... // was 26.0 for a long time
     minDistanceFromWall = 22.0; // was 23.0 for a long time
   }
-  else if (southBlockCount == 0 && (hardLeftCount - 3)%4 == 0) { //SOUTH WALL COLOR READ
+  /*else if (southBlockCount == 0 && (hardLeftCount - 3)%4 == 0) { //SOUTH WALL COLOR READ
     maxDistanceFromWall = 5.0;
-    minDistanceFromWall = 3.5;
-  } 
+    minDistanceFromWall = 3.5; 
+  } */
   else if ((hardLeftCount - 3)%4 == 0) { // SOUTH WALL
     maxDistanceFromWall = 19.9; //20; //16.5; //FINAL 20.3 almost perfect or 20.7
     minDistanceFromWall = 17.9; //17.5; //14; //FINAL 17.5 almost perfect or 17.9
@@ -1085,8 +1102,9 @@ void color() {
   delay(10);
 }
 
-void setColor(int zz) {
-  eastColorLoc[detectColora(outa)] = zz;
+int setColor(int zz) {
+  //eastColorLoc[detectColora(outa)] = zz;
+  return detectColora(outa);
 }
 
 int detectColor(int taosOutPin){
