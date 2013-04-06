@@ -602,7 +602,7 @@ void readEastColors() {
     }
     delay(200);
     northCount++;
-  }
+  /*}
   else if (cmRR > eastLocR[1] - 2 && northCount == 1) {
     //getPerpendicular();
     //fineTune(0, eastLocR[0] - 0.0);
@@ -620,7 +620,7 @@ void readEastColors() {
     setColor(2);
     delay(200);
     northCount++;
-  /*}
+  }
   else if (cmRR > eastLocR[3] - 2 && northCount == 3) {
     //getPerpendicular();
     //fineTune(0, eastLocR[0] - 0.0);
@@ -653,9 +653,9 @@ void readEastColors() {
     dPrint("the location set for blue ", eastColorLoc[4]);
     dPrint("the location set for brown ", eastColorLoc[5]);
     northCount++;
-    topSpeed = 80;
-    right();
-    delay(700);
+    topSpeed = 90;
+    left();
+    delay(1000);
     getPerpendicular();
     //fineTune(false, 135);
     setCmRR();
