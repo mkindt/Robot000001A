@@ -33,6 +33,7 @@ int S2a = 42;//pinE
 int S3a = 41;//pinF
 int outa = 40;//pinC
 int LEDa = 38;//pinD
+int irDelay = 100; //IR delay between checks in ms
 // 38 through 42
 boolean irstatus;
 ////////////////// END GRIPPER /////////
@@ -496,7 +497,8 @@ void pickUpBlock() {
     myservo1.attach(9);
     myservo2.attach(8);
     myservo1.write(153);
-    lowerarm();           // Lower the arm to the block 
+    lowerarm(); 
+    checkIRs();    // Lower the arm to the block 
     closesmallservo();      //  Close gripper
     delay(100);
     if (blockSize == 333) {
@@ -551,6 +553,10 @@ void pickUpBlock() {
 //////DROPOFF  ////////////////////////////////////////////////////////////////////////
 void dropOffBlock() {
   freeze();
+  
+  
+  
+    
     myservo1.attach(9);
     myservo2.attach(8);
     relBlock(); //lowerarm();            // Lower the gripper arm
@@ -565,7 +571,17 @@ void dropOffBlock() {
 }
 ////READEAST ////////////////////////////////////////////////////////////////////////
 void readEastColors() {
+<<<<<<< HEAD
+  debugPrintLn("Incomming data is from the bottom color sensor");
+  if (cmF < 24){
+    hardLeft(1, 0);
+  }
+  if (cmF > 140){
+    northCount = 0;
+  }
+=======
   setCmRR();
+>>>>>>> upstream/master
   if (cmF < 92 && northCount > 5){  //originally <85
     hardLeft(1, 0);
     northCount = 0;
@@ -1087,6 +1103,7 @@ void lowerarm() {
   for(pos2 = 120; pos2>=12; pos2-=1) {   // big servo lowers arm
     myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
+    
   }
 }
 void relBlock() {
@@ -1425,19 +1442,29 @@ void TCS3200setupa() {
 void checkIRs() {
   //Checks the IRs at the pickup area to see if the bot is in place to pick up 
   //a block
+  int irCounter = 0;
     if ((digitalRead(irPin1) != 1) && (digitalRead(irPin2) != 1))   {
+    debugPrintLn("Slightly moving back");
+    irCounter++;
+    
     slightBackup();
   }
   else if (digitalRead(irPin1) != 1) {
+    debugPrintLn("Slightly moving forward");
+    irCounter++;
     slightForward();
   }
   else if (digitalRead(irPin2) != 1) {
     slightBackup();
-  }else{
+    irCounter++;
+}else if(irCounter >= 3){
+  debugPrintLn("IR ERROR. We tried to adjust too many times and didn't get it right");
+}
+  else{
   debugPrintLn("no move needed.");
   irstatus = true;
-  delay(1000);
-}
+  delay(irDelay);
+  }
 }
 
 void slightBackup()  {
@@ -1450,7 +1477,9 @@ void slightBackup()  {
    SetSpeed(0,false, int(60*0.96));
    SetSpeed(0,false,60);
    //delay before check again
-   delay(1500);
+   delay(irDelay);
+   SetSpeed(0,false,0);
+   SetSpeed(1,false,0);
    checkIRs();
   }
 }
@@ -1462,7 +1491,9 @@ void slightForward()  {
       SetSpeed(0,true, int(60*0.96));
       SetSpeed(1,true,60);
       //delay before check again
-      delay(1500);
+      delay(irDelay);
+      SetSpeed(0,true,0);
+      SetSpeed(1,true,0);
       checkIRs();
     }
 }
