@@ -42,6 +42,10 @@ float southLocF[] = { 88.3, 80.7, 73.1, 65.5, 57.9, 50.2 }; //adjusted for cente
 float eastLocR[] = { 107.0, 114.6, 122.2, 129.9, 137.5, 145.1 };
 //float disF[] = { 132.0, 122.0, 114.0, 107.0, 99.0, 91.0, 53.0, 45.0, 37.0, 29.0, 21.0, 13.0 };
 int eastColorLoc[] = { 10, 10, 10, 10, 10, 10 };
+int eastColorSet1[] = { 1, 2, 0, 3, 4, 5 };
+int eastColorSet2[] = { 2, 3, 1, 5, 0, 4 };
+int eastColorSet3[] = { 3, 4, 0, 2, 5, 1 };
+int eastColorSet4[] = { 1, 3, 2, 4, 5, 0 };
 // int southColorLoc[] = { 0, 0, 0, 0, 0, 0 }; 
 // colors below will be measured and recorded in first passes unless we have access to competition boards
 // colorLoc indexes eastLocF and eastLocR: i.e. eastLocF[colorLoc[RED]]
@@ -553,10 +557,6 @@ void pickUpBlock() {
 //////DROPOFF  ////////////////////////////////////////////////////////////////////////
 void dropOffBlock() {
   freeze();
-  
-  
-  
-    
     myservo1.attach(9);
     myservo2.attach(8);
     relBlock(); //lowerarm();            // Lower the gripper arm
@@ -569,6 +569,8 @@ void dropOffBlock() {
     myservo2.detach(); 
   // delay(1000);
 }
+
+
 ////READEAST ////////////////////////////////////////////////////////////////////////
 void readEastColors() {
   setCmRR();
@@ -582,17 +584,17 @@ void readEastColors() {
     //getPerpendicular();
     freeze();
     int colorRef = setColor(0);
-    if (colorRef == southColorSet1[0]) {
-      eastColorLoc = southColorSet1;
+    if (colorRef == eastColorSet1[0]) {
+      //eastColorLoc = eastColorSet1;
     }
-    else if (colorRef == southColorSet2[0]) {
-      eastColorLoc = southColorSet2;
+    else if (colorRef == eastColorSet2[0]) {
+      //eastColorLoc = eastColorSet2;
     }
-    else if (colorRef == southColorSet3[0]) {
-      eastColorLoc = southColorSet3;
+    else if (colorRef == eastColorSet3[0]) {
+      //eastColorLoc = eastColorSet3;
     }
-    else if (colorRef == southColorSet4[0]) {
-      eastColorLoc = southColorSet4;
+    else if (colorRef == eastColorSet4[0]) {
+      //eastColorLoc = eastColorSet4;
     }
     delay(200);
     northCount++;
