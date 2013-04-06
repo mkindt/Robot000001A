@@ -176,11 +176,11 @@ void goWest() {
   if (hardLeftCount < 2) { //34 inches for rear? //used to be <2
     delay(30);
     setCmRR();
-    if (cmRR > 67 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
+    if (cmRR > 69 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
       freeze();
       dPrint("front in the turn is ", cmF);
       getPerpendicular();
-      fineTune(false, 71.8); //71 seemed perfect
+      fineTune(false, 72.2); //71 seemed perfect //71.8 for a long tim
       hardLeft(1, 0); //CURRENTLY BLIND
     }
   }
@@ -201,7 +201,7 @@ void goSouthForBlock() {
   switch(blockSize) {
     case 0:  // air block and default case 
       // pick up blocks on hardLeftCount == 2, 6, 10, 14, 18, 22, ... when (HLC - 2)%4 ==0
-      setCmRR();
+      setCmRR(); //have to use initially because of missing the ramp using left rear
       //if (cmR < (loadingLocR[blockCount] + 7) || RCTime(11) > QTIref ) 
       //  parallelMove(60);
       //}
@@ -219,7 +219,7 @@ void goSouthForBlock() {
           // MAX REAR BEFORE FLAKEY LOW READS FROM POTENTIAL LEFT-BEHIND AIR BLOCK is ~114 //////
             getPerpendicular();
             fineTune(false, loadingLocR[blockCount] + 9.8); //9.8//9.5 was almost perfect
-            perfection();
+            //perfection();
             getPerpendicular();
             fineTune(false, loadingLocR[blockCount] + 9.8); //9.8
             getPerpendicular();
@@ -300,6 +300,24 @@ void getPerpendicular() {
   distAveSideFront = pingWall(3); 
   distAveSideRear = pingWall(2);
   difference = distAveSideFront - distAveSideRear;
+  }
+  freeze();
+}
+
+void getPerpendicular1() {
+  setCmR();
+  setCmRR();
+  float difference = cmR - cmRR;
+  while (difference > 4.0 || difference < 2.0) { //3.8, 2.2?//working really well with 0.8
+    if (cmR - 3.1 > cmRR) {
+        swivelR();
+    }
+    else {
+      swivelL();
+    }
+  setCmR();
+  setCmRR();
+  difference = cmR - cmRR;
   }
   freeze();
 }
@@ -588,28 +606,32 @@ void readEastColors() {
     hardLeft(1, 0);
     northCount = 0;
   }
-  if (cmF <= 130 && cmRR > eastLocR[0] - 2 && northCount == 0 && millis() > timeRef + 1100) {
+  if (cmF <= 130 && cmRR > eastLocR[0] - 3 && northCount == 0 && millis() > timeRef + 1100) {
     //getPerpendicular();
     //fineTune(0, eastLocR[0] - 0.0);
     //getPerpendicular();
     freeze();
     int colorRef = setColor(0);
+    delay(100); //added to deal with color sensor problems?
     dPrint("colorRef is this color: ", colorRef);
-    if (colorRef == eastColorSet1[0]) {
+    if (eastColorSet1[colorRef] == 0) {
       copyArray(eastColorLoc, eastColorSet1);
       copyArray(southColorLoc, southColorSet1);
     }
-    else if (colorRef == eastColorSet2[0]) {
+    else if (eastColorSet2[colorRef] == 0) {
       copyArray(eastColorLoc, eastColorSet2);
       copyArray(southColorLoc, southColorSet2);
     }
-    else if (colorRef == eastColorSet3[0]) {
+    else if (eastColorSet3[colorRef] == 0) {
       copyArray(eastColorLoc, eastColorSet3);
       copyArray(southColorLoc, southColorSet3);
     }
-    else if (colorRef == eastColorSet4[0]) {
+    else if (eastColorSet4[colorRef] == 0) {
       copyArray(eastColorLoc, eastColorSet4);
       copyArray(southColorLoc, southColorSet4);
+    }
+    else {
+      copyArray(eastColorLoc, eastColorSet4); //test of function
     }
     delay(200);
     northCount++;
@@ -668,11 +690,11 @@ void readEastColors() {
     left();
     delay(400); //300
     straight();
-    delay(400); //500
+    delay(600); //500
     getPerpendicular();
     //fineTune(false, 135);
     setCmRR();
-    while (cmRR < 130) {
+    while (cmRR < 126) {
       straight();
       setCmRR();
     }  
@@ -733,8 +755,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   } 
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
-      dPrint("side front is ", distAveSideFront);
-      dPrint("                side rear is ", distAveSideRear);
+      //dPrint("side front is ", distAveSideFront);
+      //dPrint("                side rear is ", distAveSideRear);
   if (distAveSideFront > 80) {
     pingWall(3);
   }
@@ -824,7 +846,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(230); // turnTimer); //tests returned 319 // 350 has been working perfectly
+   delay(190); // turnTimer); //tests returned 319 // 350 was perfect // new tires: 230
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
@@ -1116,7 +1138,7 @@ void lowerarm() {
   }
 }
 void relBlock() {
-    for(pos2 = 120; pos2>=30; pos2-=1) {   // big servo lowers arm
+    for(pos2 = 120; pos2>=20; pos2-=1) {   // big servo lowers arm
     myservo2.write(pos2);              // tell servo to go to position in variable 'pos'
     delay(15);                       // waits 15ms for the servo to reach the position
   }
