@@ -191,7 +191,7 @@ void goWest() {
       //fineTune(true, 30.0); //26 was great
       freeze();
       //getPerpendicular();
-      fineTune(true, 24.5);
+      fineTune(true, 24.3); //24.5
       hardLeft(1, 0);
     }
   }
@@ -219,7 +219,7 @@ void goSouthForBlock() {
           // MAX REAR BEFORE FLAKEY LOW READS FROM POTENTIAL LEFT-BEHIND AIR BLOCK is ~114 //////
             getPerpendicular();
             fineTune(false, loadingLocR[blockCount] + 9.8); //9.8//9.5 was almost perfect
-            //perfection();
+            perfection();
             getPerpendicular();
             fineTune(false, loadingLocR[blockCount] + 9.8); //9.8
             getPerpendicular();
@@ -281,7 +281,7 @@ void goSouthForBlock() {
 }
 void perfection() {
   float distAveSideFront = pingWall(3); 
-  while (distAveSideFront > 20.4 || distAveSideFront < 18.5) {
+  while (distAveSideFront > 21.0 || distAveSideFront < 18.5) {
     parallelMove(80);
     distAveSideFront = pingWall(3);
   }
@@ -688,7 +688,7 @@ void readEastColors() {
     northCount++;
     topSpeed = 90;
     left();
-    delay(400); //300
+    delay(450); //300
     straight();
     delay(600); //500
     getPerpendicular();
