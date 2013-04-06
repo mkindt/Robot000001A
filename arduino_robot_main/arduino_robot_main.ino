@@ -112,7 +112,7 @@ void loop() {
   if (start == 0) { //startup calibration for sonars
     debugPrint("");
     debugPrint("test ");
-    QTIref = RCTime(11); 
+    //QTIref = RCTime(11); 
   myservo2.attach(8);
   for (pos2 = 100; pos2 < 120; pos2++) {
     myservo2.write(pos2);
@@ -691,6 +691,8 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   } 
   float distAveSideFront = pingWall(3); 
   float distAveSideRear = pingWall(2);
+      dPrint("side front is ", distAveSideFront);
+      dPrint("                side rear is ", distAveSideRear);
   if (distAveSideFront > 80) {
     pingWall(3);
   }
@@ -699,10 +701,10 @@ void parallelMove(int SetTopSpeed) { // standard KEY DISTANCE FROM WALL: 6.5 inc
   }
   // start by getting to the right distance from the wall
   // if almost parallel but too far from wall: 
-  if (distAveSideFront > maxDistanceFromWall && distAveSideRear - distAveSideFront > 1.5 ){// 20 AND 7 originally
+  if (distAveSideFront > maxDistanceFromWall && distAveSideRear - distAveSideFront > 1 ){// 20 AND 7 originally
     straight(); //if already turned, don't turn more
   }
-  else if (distAveSideFront < minDistanceFromWall && distAveSideFront - distAveSideRear > 1.5 ){ // 18 AND 7 originally
+  else if (distAveSideFront < minDistanceFromWall && distAveSideFront - distAveSideRear > 1 ){ // 18 AND 7 originally
     straight(); //if already turned, don't turn more
   }
   else if (distAveSideFront > maxDistanceFromWall ){ //&& distAveSideRear - distAveSideFront < 7 ){// 20 AND 7 originally
