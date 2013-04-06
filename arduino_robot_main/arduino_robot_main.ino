@@ -498,7 +498,7 @@ void pickUpBlock() {
     myservo2.attach(8);
     myservo1.write(153);
     lowerarm(); 
-    checkIRs();    // Lower the arm to the block 
+    //checkIRs();    // THIS WILL BE IMPLEMENTED NEXT
     closesmallservo();      //  Close gripper
     delay(100);
     if (blockSize == 333) {
@@ -571,17 +571,7 @@ void dropOffBlock() {
 }
 ////READEAST ////////////////////////////////////////////////////////////////////////
 void readEastColors() {
-<<<<<<< HEAD
-  debugPrintLn("Incomming data is from the bottom color sensor");
-  if (cmF < 24){
-    hardLeft(1, 0);
-  }
-  if (cmF > 140){
-    northCount = 0;
-  }
-=======
   setCmRR();
->>>>>>> upstream/master
   if (cmF < 92 && northCount > 5){  //originally <85
     hardLeft(1, 0);
     northCount = 0;
