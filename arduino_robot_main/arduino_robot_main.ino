@@ -54,8 +54,8 @@ int southColorSet4[] = { 5, 0, 2, 1, 3, 4 }; //good
 // colorLoc indexes eastLocF and eastLocR: i.e. eastLocF[colorLoc[RED]]
 // char * colors[] = {"error", "red", "orange", "yellow", "green", "blue", "brown"}; 
 //int eastColorLoc[] = { 4, 5, 3, 0, 1, 2 };
-int eastColorLoc[] = { 0, 1, 2, 3, 4, 5 };
-int southColorLoc[] = { 0, 1, 2, 3, 4, 5 };
+int eastColorLoc[] = { 4, 1, 5, 0, 2, 3 };
+int southColorLoc[] = { 1, 2, 0, 3, 4, 5 };
 float loadingLoc[] = { 138.11, 130.5, 122.87, 115.25, 107.63, 100.01, 92.39, 84.77, 77.15, 69.53, 61.91, 54.29, 46.67, 39.05, 0, 0};
 float loadingLocR[] = { 23.1, 30.71, 38.32, 45.93, 53.54, 61.15, 68.76, 76.37 };
 int blockCount = 0; //tracks number of blocks picked up / delivered
@@ -176,7 +176,7 @@ void goWest() {
   if (hardLeftCount < 2) { //34 inches for rear? //used to be <2
     delay(30);
     setCmRR();
-    if (cmRR > 69 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
+    if (cmRR > 71 && cmF < 33  && (millis() > timeRef + 400)) { //cmF was 35 //69 //PUT IN TIMER OR SECONDARY CHECK
       freeze();
       dPrint("front in the turn is ", cmF);
       getPerpendicular();
@@ -186,7 +186,7 @@ void goWest() {
   }
   else {
     setCmRR();
-    if (cmRR > 60 && cmF < 35 && (millis() > timeRef + 300)) { //24
+    if (cmRR > 60 && cmF < 25 && (millis() > timeRef + 300)) { //24
       //getPerpendicular();
       //fineTune(true, 30.0); //26 was great
       freeze();
@@ -269,8 +269,13 @@ void goSouthForBlock() {
       break;
     case 2: // eastern bloc
       setCmR();
+      
       if (cmR < 82) {         //TRYING REAR             // cmF > 112)
         parallelMove(100);
+      }
+      if (cmF <= 25) { // added to prevent going too far
+        getPerpendicular();
+        hardLeft(1, 0);
       }
       else if (cmR >= 82) { // cmF <= 112)
         getPerpendicular();
@@ -280,9 +285,13 @@ void goSouthForBlock() {
   }
 }
 void perfection() {
-  float distAveSideFront = pingWall(3); 
+  float distAveSideFront = pingWall(3);
+  timeRef = millis();
   while (distAveSideFront > 21.0 || distAveSideFront < 18.5) {
     parallelMove(80);
+    if (millis() > timeRef + 400){
+      break;
+    }
     distAveSideFront = pingWall(3);
   }
 }
@@ -498,12 +507,12 @@ void goNorth() {
     }
     case 2: { //delivering east block
       setCmRR();
-      if (cmF <= 130 && cmRR > eastLocR[eastColorLoc[currentBlockColor]] - 6 && millis() > timeRef + 300) {
+      if (cmF <= 130 && cmRR > eastLocR[eastColorLoc[currentBlockColor]] - 9 && millis() > timeRef + 300) {
         parallelMove(60);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 0.0);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 3.0);
         getPerpendicular();
-        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 0.0);
+        fineTune(0, eastLocR[eastColorLoc[currentBlockColor]] - 3.0);
         dropOffBlock();
         crookedReverse();
         delay(700);
@@ -606,7 +615,7 @@ void readEastColors() {
     hardLeft(1, 0);
     northCount = 0;
   }
-  if (cmF <= 130 && cmRR > eastLocR[0] - 3 && northCount == 0 && millis() > timeRef + 1100) {
+  if (cmF <= 130 && cmRR > eastLocR[0] - 5 && northCount == 0 && millis() > timeRef + 1100) {
     //getPerpendicular();
     //fineTune(0, eastLocR[0] - 0.0);
     //getPerpendicular();
@@ -846,7 +855,7 @@ void hardLeft(int calibrate, boolean soften) {
      sideRear = pingWall(2);
        dPrint("made it to ", hardLeftTurnCounter);
    } */
-   delay(190); // turnTimer); //tests returned 319 // 350 was perfect // new tires: 230
+   delay(170); // turnTimer); //tests returned 319 // 350 was perfect // new tires: 230, cleaned:170 blah
  }
  else if (calibrate == 2) {
    hardLeftTurnCounter = 0;
@@ -864,6 +873,23 @@ void hardLeft(int calibrate, boolean soften) {
    }
    turnTimer = millis() - timeRef;
    dPrint("turnTimer = ", turnTimer);
+ }
+ else if (calibrate == 3) {
+  setCmR();
+  setCmRR();
+  float difference = cmR - cmRR;
+  while (difference > 4.0 || difference < 2.0) { //3.8, 2.2?//working really well with 0.8
+    if (cmR - 3.1 > cmRR) {
+        swivelR();
+    }
+    else {
+      swivelL();
+    }
+  setCmR();
+  setCmRR();
+  difference = cmR - cmRR;
+  }
+  freeze();
  }
    
  SetSpeed(0, true, 0);
