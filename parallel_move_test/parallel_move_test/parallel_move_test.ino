@@ -12,7 +12,7 @@ int blockSize = 0;
 
 
 void setup(){
-  
+  pololu.begin(19200);
 }
 void loop(){
   parallelMove(60);
